@@ -42,20 +42,6 @@
     ].map(([label, value]) => `<div class="dm-k8s-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   }
 
-  function setDashboardExpanded(view, expanded) {
-    const row = view.querySelector("[data-dm-k8s-expanded-row]");
-    const toggle = view.querySelector("[data-dm-k8s-dashboard-toggle]");
-    if (!row || !toggle) return;
-    row.hidden = !expanded;
-    view.classList.toggle("dm-k8s-dashboard-expanded", expanded);
-    toggle.title = expanded ? "Collapse Kubernetes summary" : "Expand Kubernetes summary";
-    const icon = toggle.querySelector("i");
-    if (icon) {
-      icon.classList.toggle("fa-expand", !expanded);
-      icon.classList.toggle("fa-compress", expanded);
-    }
-  }
-
   function renderFull(view, data) {
     const nodes = view.querySelector("[data-dm-k8s-nodes]");
     const namespaces = view.querySelector("[data-dm-k8s-namespaces]");
@@ -128,6 +114,9 @@
   }
 
   function hideEmptyTabs(tabs = document.querySelector(".tabs")) {
+    if (tabs && document.querySelector('[data-dm-k8s-view="full"], [data-dm-k8s-view="docker"]')) {
+      tabs.classList.add("dm-k8s-plugin-tabs");
+    }
     if (tabs && tabs.childElementCount === 0 && tabs.textContent.trim() === "") {
       tabs.hidden = true;
     }
@@ -222,15 +211,6 @@
   }
 
   document.addEventListener("click", (event) => {
-    const dashboardToggle = event.target.closest("[data-dm-k8s-dashboard-toggle]");
-    if (dashboardToggle) {
-      event.preventDefault();
-      const view = dashboardToggle.closest("[data-dm-k8s-view]");
-      const expanded = !view.classList.contains("dm-k8s-dashboard-expanded");
-      setDashboardExpanded(view, expanded);
-      window.localStorage.setItem("dm-k8s-dashboard-expanded", expanded ? "1" : "0");
-      return;
-    }
     const actionButton = event.target.closest("[data-dm-k8s-action]");
     if (actionButton) lifecycle(actionButton.dataset.dmK8sAction, actionButton);
   });
@@ -252,9 +232,6 @@
       observedViews.add(view);
       added = true;
       observer.observe(view);
-      if (view.dataset.dmK8sView === "dashboard") {
-        setDashboardExpanded(view, window.localStorage.getItem("dm-k8s-dashboard-expanded") === "1");
-      }
     });
     if (added) refresh();
   }

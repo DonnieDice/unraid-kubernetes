@@ -25,7 +25,7 @@
 
 <FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.0-noarch-1.txz">
 <URL>https://gitlab.dicematrix.cloud/api/v4/projects/122/packages/generic/unraid.kubernetes/0.1.0/unraid.kubernetes-0.1.0-noarch-1.txz</URL>
-<SHA256>396913bc02777f996c033036624939893de39e966f0664eea8595973af494ab4</SHA256>
+<SHA256>c50998321064d6fb26c48d99dfea92bab8ea4441dd1c9558576c674c0581f175</SHA256>
 </FILE>
 
 <FILE Run="/bin/bash">

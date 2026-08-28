@@ -36,5 +36,5 @@ publish:
     - VERSION=$(tr -d '[:space:]' < VERSION)
     - PACKAGE="unraid.kubernetes-${VERSION}-noarch-1.txz"
     - REGISTRY="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/unraid.kubernetes/${VERSION}"
-    - curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "dist/${PACKAGE}" "${REGISTRY}/${PACKAGE}"
-    - curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file dist/unraid.kubernetes.plg "${REGISTRY}/unraid.kubernetes.plg"
+    - 'curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "dist/${PACKAGE}" "${REGISTRY}/${PACKAGE}"'
+    - 'curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file dist/unraid.kubernetes.plg "${REGISTRY}/unraid.kubernetes.plg"'
