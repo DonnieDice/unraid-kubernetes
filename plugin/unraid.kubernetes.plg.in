@@ -6,9 +6,9 @@
   author="Donnie Dice"
   version="@VERSION@"
   launch="Kubernetes"
-  pluginURL="https://gitlab.dicematrix.cloud/other-projects/unraid-kubernetes/-/raw/main/plugin/unraid.kubernetes.plg"
+  pluginURL="https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg"
   min="7.1.0"
-  support="https://gitlab.dicematrix.cloud/other-projects/unraid-kubernetes/-/issues">
+  support="https://github.com/DonnieDice/unraid-kubernetes/discussions">
 
 <CHANGES>
 <![CDATA[
@@ -24,7 +24,7 @@
 </FILE>
 
 <FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-@VERSION@-noarch-1.txz">
-<URL>https://gitlab.dicematrix.cloud/api/v4/projects/122/packages/generic/unraid.kubernetes/@VERSION@/unraid.kubernetes-@VERSION@-noarch-1.txz</URL>
+<URL>https://github.com/DonnieDice/unraid-kubernetes/releases/download/v@VERSION@/unraid.kubernetes-@VERSION@-noarch-1.txz</URL>
 <SHA256>@PACKAGE_SHA256@</SHA256>
 </FILE>
 

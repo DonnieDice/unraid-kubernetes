@@ -20,6 +20,7 @@ exit(
 php tests/settings-roundtrip.php
 node --check src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 xmllint --noout plugin/unraid.kubernetes.plg.in
+xmllint --noout plugin/unraid.kubernetes.plg ca_profile.xml plugins/*.xml
 
 if command -v shellcheck >/dev/null 2>&1; then
   find src tools -type f \( -name '*.sh' -o -path '*/event/started' -o -path '*/event/stopping_docker' -o -name 'rc.*' \) -print0 | xargs -0 shellcheck

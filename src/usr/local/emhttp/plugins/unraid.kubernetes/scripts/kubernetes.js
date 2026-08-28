@@ -114,9 +114,9 @@
   }
 
   function hideEmptyTabs(tabs = document.querySelector(".tabs")) {
-    if (tabs && document.querySelector('[data-dm-k8s-view="full"], [data-dm-k8s-view="docker"]')) {
-      tabs.classList.add("dm-k8s-plugin-tabs");
-    }
+    document.querySelectorAll('[data-dm-k8s-view="full"], [data-dm-k8s-view="docker"]').forEach((view) => {
+      view.closest(".content")?.querySelector(":scope > .title")?.classList.add("dm-k8s-plugin-title");
+    });
     if (tabs && tabs.childElementCount === 0 && tabs.textContent.trim() === "") {
       tabs.hidden = true;
     }
@@ -133,9 +133,13 @@
       renderSummary(view, data);
       if (isDashboard) {
         const inline = view.querySelector("[data-dm-k8s-inline-summary]");
+        const warnings = view.querySelector("[data-dm-k8s-dashboard-warnings]");
         const nodesReady = data.nodes.filter((node) => node.ready).length;
         const podsReady = data.pods.filter((pod) => pod.phase === "Running" && pod.ready.split("/")[0] === pod.ready.split("/")[1]).length;
         if (inline) inline.innerHTML = `<span><i class="fa fa-fw fa-server"></i><strong>${nodesReady}/${data.nodes.length}</strong> nodes</span><span><i class="fa fa-fw fa-cube"></i><strong>${podsReady}/${data.pods.length}</strong> pods</span>`;
+        if (warnings) warnings.innerHTML = data.warnings.length
+          ? data.warnings.slice().reverse().map((warning) => `<article><strong>${escapeHtml(warning.reason)}</strong><span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}: ${escapeHtml(warning.message)}</span></article>`).join("")
+          : '<span class="green-text"><i class="fa fa-fw fa-check"></i> No recent Kubernetes warning events.</span>';
       }
       if (view.dataset.dmK8sView === "full") renderFull(view, data);
       if (view.dataset.dmK8sView === "docker") renderRuntime(view, data);

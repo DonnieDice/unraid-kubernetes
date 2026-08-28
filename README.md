@@ -9,6 +9,10 @@ This is an **Unraid plugin**, not a Docker template. Install the `.plg` from
 **Plugins**, or from a Community Apps entry published as a plugin. Installation
 does four things:
 
+```text
+https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg
+```
+
 1. Downloads and verifies a pinned k3d binary.
 2. Installs the Kubernetes page, dashboard tile, Docker-page summary, and
    lifecycle service into Unraid's native webGUI.
@@ -92,7 +96,8 @@ Existing configuration and data files are never overwritten.
 ## Project Repositories
 
 - Development source: `https://gitlab.dicematrix.cloud/other-projects/unraid-kubernetes`
-- Public mirror: `https://github.com/donniedice/unraid-kubernetes`
+- Public mirror and releases: `https://github.com/DonnieDice/unraid-kubernetes`
+- Public support: `https://github.com/DonnieDice/unraid-kubernetes/discussions`
 
 ## Development
 

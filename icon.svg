@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Unraid Kubernetes</title>
+  <desc id="desc">Three connected cubes representing a Kubernetes cluster on Unraid.</desc>
+  <defs>
+    <linearGradient id="background" x1="24" y1="20" x2="232" y2="236" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#242833"/>
+      <stop offset="1" stop-color="#111318"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="67" y1="57" x2="190" y2="201" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffb04a"/>
+      <stop offset="1" stop-color="#f15a24"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#background)"/>
+  <path d="M128 48 181 78v60l-53 30-53-30V78l53-30Z" fill="none" stroke="url(#accent)" stroke-width="11" stroke-linejoin="round"/>
+  <path d="m77 79 51 30 51-30M128 109v59" fill="none" stroke="url(#accent)" stroke-width="11" stroke-linejoin="round"/>
+  <path d="M47 163 78 145l31 18v36l-31 18-31-18v-36Zm100 0 31-18 31 18v36l-31 18-31-18v-36Z" fill="#242833" stroke="#f15a24" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M105 156 128 143l23 13M78 145v-18m100 18v-18" fill="none" stroke="#f15a24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
