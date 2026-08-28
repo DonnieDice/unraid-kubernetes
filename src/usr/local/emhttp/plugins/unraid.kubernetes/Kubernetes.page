@@ -1,0 +1,56 @@
+Menu="Tasks:55"
+Title="Kubernetes"
+Tag="fa-cubes"
+Code="f1b3"
+Type="xmenu"
+Cond="exec(\"grep -o '^DOCKER_ENABLED=.yes' /boot/config/docker.cfg 2>/dev/null\")"
+---
+<link rel="stylesheet" href="<?autov('/plugins/unraid.kubernetes/styles/kubernetes.css')?>">
+
+<section class="dm-k8s-view dm-k8s-page" data-dm-k8s-view="full">
+  <div class="dm-k8s-heading">
+    <div>
+      <h2>Unraid Kubernetes</h2>
+      <p>k3d/K3S status from the local Unraid Docker daemon.</p>
+    </div>
+    <div class="dm-k8s-actions">
+      <a href="/Settings/KubernetesSettings"><i class="fa fa-fw fa-cog"></i> Settings</a>
+      <button type="button" data-dm-k8s-action="start">Start</button>
+      <button type="button" data-dm-k8s-action="restart">Restart</button>
+      <button type="button" data-dm-k8s-action="stop">Stop</button>
+    </div>
+  </div>
+
+  <div class="dm-k8s-message" data-dm-k8s-message>Loading cluster status...</div>
+  <div class="dm-k8s-summary" data-dm-k8s-summary></div>
+
+  <h3>Nodes</h3>
+  <div class="dm-k8s-table-wrap">
+    <table class="tablesorter"><thead><tr>
+      <th>Name</th><th>Status</th><th>Role</th><th>K3S</th><th>CPU</th><th>Memory</th>
+    </tr></thead><tbody data-dm-k8s-nodes></tbody></table>
+  </div>
+
+  <div class="dm-k8s-grid">
+    <div>
+      <h3>Namespaces</h3>
+      <div class="dm-k8s-table-wrap">
+        <table class="tablesorter"><thead><tr><th>Namespace</th><th>Pods</th><th>Ready</th></tr></thead>
+          <tbody data-dm-k8s-namespaces></tbody></table>
+      </div>
+    </div>
+    <div>
+      <h3>Recent Warnings</h3>
+      <div class="dm-k8s-warnings" data-dm-k8s-warnings></div>
+    </div>
+  </div>
+
+  <h3>Pods</h3>
+  <div class="dm-k8s-table-wrap">
+    <table class="tablesorter"><thead><tr>
+      <th>Namespace</th><th>Name</th><th>Ready</th><th>Status</th><th>Restarts</th><th>Node</th>
+    </tr></thead><tbody data-dm-k8s-pods></tbody></table>
+  </div>
+</section>
+
+<script src="<?autov('/plugins/unraid.kubernetes/scripts/kubernetes.js')?>"></script>

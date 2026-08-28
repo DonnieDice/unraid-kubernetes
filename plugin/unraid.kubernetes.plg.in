@@ -1,0 +1,54 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN>
+
+<PLUGIN
+  name="unraid.kubernetes"
+  author="Donnie Dice"
+  version="@VERSION@"
+  launch="Kubernetes"
+  pluginURL="https://gitlab.dicematrix.cloud/other-projects/unraid-kubernetes/-/raw/main/plugin/unraid.kubernetes.plg"
+  min="7.1.0"
+  support="https://gitlab.dicematrix.cloud/other-projects/unraid-kubernetes/-/issues">
+
+<CHANGES>
+<![CDATA[
+### @VERSION@
+- Initial native Unraid Kubernetes page and dashboard tile.
+- Add safe k3d installation, cluster adoption, and lifecycle integration.
+]]>
+</CHANGES>
+
+<FILE Name="/boot/config/plugins/unraid.kubernetes/k3d-v5.9.0-linux-amd64">
+<URL>https://github.com/k3d-io/k3d/releases/download/v5.9.0/k3d-linux-amd64</URL>
+<SHA256>06d8f25bc3a971c4eb29e0ff08429b180402db0f4dec838c9eac427e296800a0</SHA256>
+</FILE>
+
+<FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-@VERSION@-noarch-1.txz">
+<URL>https://gitlab.dicematrix.cloud/api/v4/projects/122/packages/generic/unraid.kubernetes/@VERSION@/unraid.kubernetes-@VERSION@-noarch-1.txz</URL>
+<SHA256>@PACKAGE_SHA256@</SHA256>
+</FILE>
+
+<FILE Run="/bin/bash">
+<INLINE>
+<![CDATA[
+upgradepkg --install-new /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-@VERSION@-noarch-1.txz
+install -m 0755 /boot/config/plugins/unraid.kubernetes/k3d-v5.9.0-linux-amd64 /usr/local/bin/k3d
+/usr/local/emhttp/plugins/unraid.kubernetes/scripts/install.sh
+rm -f $(ls /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-*-noarch-1.txz 2>/dev/null | grep -v '@VERSION@')
+]]>
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+<![CDATA[
+/etc/rc.d/rc.unraid-kubernetes stop 2>/dev/null || true
+removepkg unraid.kubernetes
+rm -rf /usr/local/emhttp/plugins/unraid.kubernetes
+rm -f /etc/rc.d/rc.unraid-kubernetes
+rm -f /usr/local/bin/k3d
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>

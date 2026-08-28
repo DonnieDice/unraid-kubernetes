@@ -1,0 +1,175 @@
+#!/bin/bash
+set -u
+
+settings="${UNRAID_K8S_SETTINGS:-/boot/config/plugins/unraid.kubernetes/settings.cfg}"
+log_tag="unraid-kubernetes"
+
+fail() {
+  logger -t "$log_tag" "ERROR: $*"
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+setting() {
+  local key="$1" default="$2" value
+  value=$(sed -nE "s/^${key}=\"([^\"]*)\"$/\1/p" "$settings" 2>/dev/null | tail -n 1)
+  printf '%s' "${value:-$default}"
+}
+
+load_settings() {
+  [[ -s "$settings" ]] || fail "settings file is missing"
+  [[ ! -L "$settings" ]] || fail "settings file must not be a symlink"
+  [[ $(stat -c '%u' "$settings") == "0" ]] || fail "settings file must be owned by root"
+  settings_mode=$(stat -c '%a' "$settings")
+  [[ "$settings_mode" =~ ^[0-7][0145][0145]$ ]] || fail "settings file must not be group or world writable"
+  cluster_name=$(setting CLUSTER_NAME unraid-k3s)
+  provider=$(setting PROVIDER k3d)
+  data_root=$(setting DATA_ROOT /mnt/user/appdata/unraid-kubernetes)
+  k3d_config=$(setting K3D_CONFIG "$data_root/config/k3d-unraid-k3s.yaml")
+  token_file=$(setting TOKEN_FILE "$data_root/secrets/server-token")
+  datastore_dir=$(setting DATASTORE_DIR "$data_root/datastore")
+  storage_dir=$(setting STORAGE_DIR "$data_root/storage")
+  kubeconfig_dir=$(setting KUBECONFIG_DIR "$data_root/kubeconfig")
+  k3s_image=$(setting K3S_IMAGE rancher/k3s:v1.36.1-k3s1)
+
+  [[ "$provider" == "k3d" || "$provider" == "external" ]] || fail "invalid Kubernetes provider"
+  [[ "$cluster_name" =~ ^[a-z0-9][a-z0-9.-]{0,62}$ ]] || fail "invalid cluster name"
+  for path in "$data_root" "$k3d_config" "$token_file" "$datastore_dir" "$storage_dir" "$kubeconfig_dir"; do
+    [[ "$path" == /* ]] || fail "all configured paths must be absolute"
+  done
+  server="k3d-${cluster_name}-server-0"
+  container_kubeconfig="/etc/rancher/k3s/kubeconfig/${cluster_name}.yaml"
+}
+
+validate_k3d_config() {
+  [[ -f "$k3d_config" && ! -L "$k3d_config" ]] || fail "k3d config must be a regular file"
+  [[ $(stat -c '%u' "$k3d_config") == "0" ]] || fail "k3d config must be owned by root"
+  config_mode=$(stat -c '%a' "$k3d_config")
+  [[ "$config_mode" =~ ^[0-7][0145][0145]$ ]] || fail "k3d config must not be group or world writable"
+}
+
+wait_for_docker() {
+  for _ in $(seq 1 60); do
+    if docker info >/dev/null 2>&1 && [[ -d /mnt/user/appdata ]]; then return 0; fi
+    sleep 5
+  done
+  fail "Docker or appdata did not become ready"
+}
+
+prepare_new_cluster() {
+  [[ ! -L "$k3d_config" ]] || fail "k3d config must not be a symlink"
+  mkdir -p "$(dirname "$k3d_config")" "$(dirname "$token_file")" \
+    "$datastore_dir" "$storage_dir" "$kubeconfig_dir"
+
+  if [[ ! -s "$token_file" ]]; then
+    umask 077
+    head -c 48 /dev/urandom | base64 -w 0 >"$token_file"
+    printf '\n' >>"$token_file"
+  fi
+  chmod 0600 "$token_file"
+
+  if [[ ! -e "$k3d_config" ]]; then
+    umask 077
+    cat >"$k3d_config" <<EOF
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: ${cluster_name}
+servers: 1
+agents: 0
+image: ${k3s_image}
+network: k3d-${cluster_name}
+ports:
+  - port: 6443:6443
+    nodeFilters:
+      - server:0
+options:
+  k3s:
+    extraArgs:
+      - arg: --write-kubeconfig=/etc/rancher/k3s/kubeconfig/${cluster_name}.yaml
+        nodeFilters:
+          - server:0
+      - arg: --write-kubeconfig-mode=600
+        nodeFilters:
+          - server:0
+      - arg: --token-file=/run/secrets/k3s-server-token
+        nodeFilters:
+          - server:0
+volumes:
+  - volume: ${kubeconfig_dir}:/etc/rancher/k3s/kubeconfig
+    nodeFilters:
+      - server:0
+  - volume: ${datastore_dir}:/var/lib/rancher/k3s/server/db
+    nodeFilters:
+      - server:0
+  - volume: ${storage_dir}:/var/lib/rancher/k3s/storage
+    nodeFilters:
+      - server:0
+  - volume: ${token_file}:/run/secrets/k3s-server-token:ro
+    nodeFilters:
+      - server:0
+EOF
+  fi
+  validate_k3d_config
+}
+
+cluster_exists() {
+  k3d cluster list --no-headers 2>/dev/null | awk '{print $1}' | grep -qx "$cluster_name"
+}
+
+start_cluster() {
+  command -v k3d >/dev/null 2>&1 || fail "k3d is not installed"
+  wait_for_docker
+  prepare_new_cluster
+
+  if cluster_exists; then
+    if ! docker ps --format '{{.Names}}' | grep -qx "$server"; then
+      logger -t "$log_tag" "Starting cluster ${cluster_name}"
+      k3d cluster start "$cluster_name" || fail "cluster failed to start"
+    fi
+  else
+    logger -t "$log_tag" "Creating cluster ${cluster_name} from persistent state"
+    k3d cluster create --config "$k3d_config" --wait --timeout 5m || fail "cluster creation failed"
+  fi
+
+  local -a containers=()
+  mapfile -t containers < <(docker ps -aq --filter "label=k3d.cluster=${cluster_name}")
+  ((${#containers[@]} == 0)) || docker update --restart unless-stopped "${containers[@]}" >/dev/null
+  for _ in $(seq 1 60); do
+    if docker exec "$server" kubectl --kubeconfig "$container_kubeconfig" get nodes --no-headers 2>/dev/null | grep -q ' Ready '; then
+      logger -t "$log_tag" "Cluster ${cluster_name} is ready"
+      return 0
+    fi
+    sleep 5
+  done
+  fail "cluster did not report a Ready node"
+}
+
+stop_cluster() {
+  if cluster_exists; then
+    logger -t "$log_tag" "Stopping cluster ${cluster_name}"
+    k3d cluster stop "$cluster_name"
+  fi
+}
+
+load_settings
+if [[ "$provider" == "external" ]]; then
+  case "${1:-status}" in
+    status) echo "${cluster_name} is configured as an external read-only cluster"; exit 0 ;;
+    start|stop|restart) logger -t "$log_tag" "External cluster lifecycle is not managed by this plugin"; exit 0 ;;
+    *) fail "usage: $0 {start|stop|restart|status}" ;;
+  esac
+fi
+if [[ "${1:-status}" != "status" ]]; then
+  exec 9>/var/run/unraid-kubernetes.lock
+  flock -n 9 || fail "another lifecycle operation is already running"
+fi
+case "${1:-status}" in
+  start) start_cluster ;;
+  stop) stop_cluster ;;
+  restart) stop_cluster && start_cluster ;;
+  status)
+    if cluster_exists; then k3d cluster list "$cluster_name"; else echo "${cluster_name} is not installed"; fi
+    ;;
+  *) fail "usage: $0 {start|stop|restart|status}" ;;
+esac

@@ -1,0 +1,53 @@
+Author="Donnie Dice"
+Title="Unraid Kubernetes"
+Type="xmenu"
+Menu="OtherSettings"
+Tag="cubes"
+Code="f1b3"
+---
+<section class="dm-k8s-view dm-k8s-settings-page">
+  <h2>Unraid Kubernetes Settings</h2>
+  <p>Configure how the Unraid plugin connects to and manages Kubernetes. Generated k3d containers remain owned by k3d and should not be recreated through Docker Edit.</p>
+  <form data-dm-k8s-settings-form>
+    <div class="dm-k8s-settings-grid">
+      <label><span>Provider</span><select name="provider">
+        <option value="k3d">Local k3d (managed)</option>
+        <option value="external">External K3S (read-only)</option>
+      </select></label>
+      <label><span>Cluster name</span><input type="text" name="cluster_name" required></label>
+      <label class="dm-k8s-settings-wide"><span>K3S image</span><input type="text" name="k3s_image" required></label>
+      <label class="dm-k8s-settings-wide"><span>k3d config path</span><input type="text" name="k3d_config" required></label>
+      <label class="dm-k8s-settings-wide"><span>External kubeconfig path</span><input type="text" name="kubeconfig" required></label>
+    </div>
+    <p class="dm-k8s-settings-help">Saving does not rewrite an existing k3d config, token, or datastore. Restart the local cluster only when a changed setting requires it.</p>
+    <div class="dm-k8s-settings-footer">
+      <span data-dm-k8s-settings-message></span>
+      <button type="submit">Save Settings</button>
+    </div>
+  </form>
+  <div class="dm-k8s-settings-docs">
+    <h2>About Unraid Kubernetes</h2>
+    <p>This native Unraid plugin installs, adopts, manages, and monitors a k3d/K3S cluster without a VM or separate web server. Visible status updates automatically every 15 seconds.</p>
+    <div class="dm-k8s-settings-doc-grid">
+      <article>
+        <h3>Where It Appears</h3>
+        <p>Kubernetes shows workloads and lifecycle controls, Dashboard shows cluster health, and Docker shows the k3d runtime separately from regular containers.</p>
+      </article>
+      <article>
+        <h3>Runtime Ownership</h3>
+        <p>k3d owns the Kubernetes server and load-balancer containers. Do not recreate them through Docker Edit; use this plugin for lifecycle and configuration.</p>
+      </article>
+      <article>
+        <h3>Provider Modes</h3>
+        <p>Local k3d is managed by the plugin. External K3S is monitored through a protected host kubeconfig and remains read-only.</p>
+      </article>
+      <article>
+        <h3>Persistent Data</h3>
+        <p>Removing the plugin preserves its datastore, token, kubeconfig, and local-path storage so recovery or deletion remains deliberate.</p>
+      </article>
+    </div>
+    <p><a href="https://github.com/donniedice/unraid-kubernetes" target="_blank" rel="noopener"><i class="fa fa-fw fa-github"></i> Documentation and source</a></p>
+  </div>
+</section>
+<link rel="stylesheet" href="<?autov('/plugins/unraid.kubernetes/styles/kubernetes.css')?>">
+<script src="<?autov('/plugins/unraid.kubernetes/scripts/kubernetes.js')?>"></script>

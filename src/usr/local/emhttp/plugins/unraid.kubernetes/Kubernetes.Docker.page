@@ -1,0 +1,27 @@
+Author="Donnie Dice"
+Title="Kubernetes"
+Type="php"
+Menu="Docker:0"
+Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v \"not\"')"
+---
+<section class="dm-k8s-view dm-k8s-docker" data-dm-k8s-view="docker">
+  <div class="dm-k8s-docker-heading">
+    <div>
+      <h2><i class="fa fa-fw fa-cubes"></i> Kubernetes Runtime</h2>
+      <span class="dm-k8s-message" data-dm-k8s-message>Loading cluster status...</span>
+    </div>
+    <div class="dm-k8s-docker-actions">
+      <span data-dm-k8s-docker-health></span>
+      <a href="/Settings/KubernetesSettings" title="Configure Kubernetes"><i class="fa fa-fw fa-cog"></i> Settings</a>
+      <a href="/Kubernetes">Details <i class="fa fa-fw fa-chevron-right"></i></a>
+    </div>
+  </div>
+  <div class="dm-k8s-table-wrap">
+    <table class="tablesorter dm-k8s-runtime-table">
+      <thead><tr><th>Container</th><th>Kubernetes Role</th><th>Image</th><th>State</th><th>Status</th></tr></thead>
+      <tbody data-dm-k8s-runtime><tr><td colspan="5">Loading runtime containers...</td></tr></tbody>
+    </table>
+  </div>
+</section>
+<link rel="stylesheet" href="<?autov('/plugins/unraid.kubernetes/styles/kubernetes.css')?>">
+<script src="<?autov('/plugins/unraid.kubernetes/scripts/kubernetes.js')?>"></script>

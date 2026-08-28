@@ -1,0 +1,2 @@
+#!/bin/bash
+nohup /etc/rc.d/rc.unraid-kubernetes start >>/var/log/unraid-kubernetes.log 2>&1 &

@@ -1,0 +1,29 @@
+Menu="Dashboard:0"
+Icon="cubes"
+---
+<?php
+$mytiles['unraid-kubernetes']['column2'] = <<<'HTML'
+<tbody class="mixed dm-k8s-view dm-k8s-dashboard" data-dm-k8s-view="dashboard" title="Kubernetes Cluster">
+  <tr><td>
+    <span class="dm-k8s-dashboard-native-actions">
+      <a href="/Settings/KubernetesSettings" title="Kubernetes settings"><i class="fa fa-fw fa-cog control"></i></a>
+      <a href="#" data-dm-k8s-dashboard-toggle title="Expand Kubernetes summary"><i class="fa fa-fw fa-expand control"></i></a>
+      <a href="/Kubernetes" title="Open Kubernetes"><i class="fa fa-fw fa-external-link control"></i></a>
+    </span>
+    <div class="tile-header dm-k8s-dashboard-header">
+      <div class="tile-header-left">
+        <i class="fa fa-fw fa-cubes dm-k8s-dashboard-icon"></i>
+        <div class="section dm-k8s-dashboard-copy">
+          <h3 class="tile-header-main">Kubernetes</h3>
+          <span class="dm-k8s-dashboard-status" data-dm-k8s-message>Loading...</span>
+        </div>
+      </div>
+      <div class="dm-k8s-dashboard-inline" data-dm-k8s-inline-summary></div>
+    </div>
+  </td></tr>
+  <tr data-dm-k8s-expanded-row hidden><td><div class="dm-k8s-summary dm-k8s-summary-compact" data-dm-k8s-summary></div></td></tr>
+</tbody>
+HTML;
+?>
+<link rel="stylesheet" href="<?autov('/plugins/unraid.kubernetes/styles/kubernetes.css')?>">
+<script src="<?autov('/plugins/unraid.kubernetes/scripts/kubernetes.js')?>"></script>

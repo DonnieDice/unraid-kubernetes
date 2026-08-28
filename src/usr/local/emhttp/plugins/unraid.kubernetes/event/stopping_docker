@@ -1,0 +1,2 @@
+#!/bin/bash
+/etc/rc.d/rc.unraid-kubernetes stop >>/var/log/unraid-kubernetes.log 2>&1 || true
