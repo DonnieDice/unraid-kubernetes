@@ -12,8 +12,8 @@ Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v
     </div>
     <div class="dm-k8s-docker-actions">
       <span data-dm-k8s-docker-health></span>
-      <a href="/Settings/KubernetesSettings" title="Configure Kubernetes"><i class="fa fa-fw fa-cog"></i> Settings</a>
       <a href="/Kubernetes">Details <i class="fa fa-fw fa-chevron-right"></i></a>
+      <a href="/Settings/KubernetesSettings" title="Configure Kubernetes"><i class="fa fa-fw fa-cog"></i> Settings</a>
     </div>
   </div>
   <div class="dm-k8s-table-wrap">

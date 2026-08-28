@@ -14,10 +14,10 @@ Cond="exec(\"grep -o '^DOCKER_ENABLED=.yes' /boot/config/docker.cfg 2>/dev/null\
       <p>k3d/K3S status from the local Unraid Docker daemon.</p>
     </div>
     <div class="dm-k8s-actions">
-      <a href="/Settings/KubernetesSettings"><i class="fa fa-fw fa-cog"></i> Settings</a>
       <button type="button" data-dm-k8s-action="start">Start</button>
       <button type="button" data-dm-k8s-action="restart">Restart</button>
       <button type="button" data-dm-k8s-action="stop">Stop</button>
+      <a href="/Settings/KubernetesSettings"><i class="fa fa-fw fa-cog"></i> Settings</a>
     </div>
   </div>
 

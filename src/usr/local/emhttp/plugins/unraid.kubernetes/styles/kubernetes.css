@@ -70,26 +70,36 @@
 
 .dm-k8s-dashboard-icon {
   font-size: 18px;
-  margin-right: 6px;
+  margin-right: 2px;
 }
 
 .dm-k8s-dashboard-status {
   font-size: 0.85em;
   font-weight: 600;
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 .dm-k8s-dashboard-native-actions {
+  align-items: center;
+  display: inline-flex;
   float: right;
+  gap: 3px;
   line-height: 22px;
   white-space: nowrap;
 }
 
+.dm-k8s-dashboard-native-actions .control {
+  float: none;
+  margin: 0;
+}
+
 .dm-k8s-dashboard-primary {
-  align-items: baseline;
+  align-items: center;
   display: inline-flex;
+  gap: 4px;
   line-height: 22px;
   min-width: 0;
+  vertical-align: middle;
   white-space: nowrap;
 }
 
@@ -97,10 +107,11 @@
   align-items: center;
   display: inline-flex;
   font-size: 0.82em;
-  gap: 22px;
+  gap: 26px;
   line-height: 22px;
-  margin-left: clamp(16px, 8%, 64px);
-  opacity: 0.65;
+  margin-left: clamp(24px, 8%, 64px);
+  opacity: 0.78;
+  vertical-align: middle;
   white-space: nowrap;
 }
 
@@ -175,7 +186,7 @@
 }
 
 div.tabs.dm-k8s-plugin-tabs {
-  margin: 0 0 6px !important;
+  margin-top: 96px !important;
   min-height: 28px;
 }
 
