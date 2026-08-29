@@ -3,6 +3,35 @@
 Native Unraid plugin for installing, adopting, managing, and observing a
 k3d/K3S cluster without running a separate web server.
 
+It integrates cluster operations directly into Unraid while keeping
+application deployment separate. Use the built-in interface for host-level
+cluster lifecycle and visibility, then deploy workloads with Kubernetes
+manifests, Helm, or your preferred GitOps tooling.
+
+## Preview
+
+### Cluster Overview
+
+The dedicated Kubernetes page summarizes cluster health, nodes, namespaces,
+pods, warnings, and guarded lifecycle actions.
+
+![Kubernetes cluster overview in the Unraid webGUI](media/kubernetes-page.png)
+
+### Docker Integration
+
+k3d runtime containers are grouped above the standard Docker container list so
+their Kubernetes roles and state remain visible without presenting them as
+editable Unraid templates.
+
+![Kubernetes runtime containers on the Unraid Docker page](media/docker-page-dashboard.png)
+
+### Dashboard Widget
+
+The compact dashboard tile provides at-a-glance cluster, node, and pod health
+with quick links to details and lifecycle controls.
+
+![Kubernetes health widget on the Unraid dashboard](media/dashboard-widget.png)
+
 ## How It Installs
 
 This is an **Unraid plugin**, not a Docker template. Install the `.plg` from
@@ -32,8 +61,8 @@ The generated k3d containers are moved into the Kubernetes runtime section and
 hidden from the regular Docker container table. They are not normal Unraid
 template containers. Do not recreate them through Docker **Edit**. k3d owns
 their labels, mounts, command line, and network. Change cluster settings through
-the Kubernetes settings page and deploy applications through GitLab manifests
-or Helm charts.
+the Kubernetes settings page and deploy applications through Kubernetes
+manifests, Helm charts, or your preferred GitOps tooling.
 
 Removing the plugin stops the cluster but preserves its datastore, token,
 kubeconfig, and local-path storage for deliberate recovery or deletion.
@@ -74,8 +103,8 @@ This lets the same Unraid UI remain in place if a local experimental cluster
 later moves to a multi-machine K3S control plane.
 
 Application manifests and GitOps remain in separate infrastructure or
-application repositories. Installing this plugin does not deploy any
-Cranberriestudios workload.
+application repositories. Installing this plugin does not deploy application
+workloads.
 
 ## Persistent Paths
 
@@ -93,11 +122,13 @@ New installations default to:
 
 Existing configuration and data files are never overwritten.
 
-## Project Repositories
+## Project
 
-- Development source: `https://gitlab.dicematrix.cloud/other-projects/unraid-kubernetes`
-- Public mirror and releases: `https://github.com/DonnieDice/unraid-kubernetes`
+- Public source and releases: `https://github.com/DonnieDice/unraid-kubernetes`
 - Public support: `https://github.com/DonnieDice/unraid-kubernetes/discussions`
+
+GitLab is the development and CI/CD source of truth. Successful changes flow to
+GitHub as the downstream public mirror used for distribution and releases.
 
 ## Development
 
