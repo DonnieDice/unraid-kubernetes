@@ -3,6 +3,13 @@
   --dm-k8s-panel: color-mix(in srgb, currentColor 4%, transparent);
 }
 
+.dm-k8s-page,
+.dm-k8s-docker {
+  box-sizing: border-box;
+  max-width: calc(100vw - 20px);
+  min-width: 0;
+}
+
 .dm-k8s-heading,
 .dm-k8s-docker-heading,
 .dm-k8s-actions,
@@ -16,6 +23,11 @@
 .dm-k8s-heading,
 .dm-k8s-docker-heading {
   justify-content: space-between;
+}
+
+.dm-k8s-heading > *,
+.dm-k8s-docker-heading > * {
+  min-width: 0;
 }
 
 .dm-k8s-heading h2,
@@ -166,7 +178,12 @@
 }
 
 .dm-k8s-table-wrap {
+  max-width: 100%;
   overflow-x: auto;
+}
+
+.dm-k8s-page > .dm-k8s-table-wrap table {
+  min-width: 680px;
 }
 
 .dm-k8s-warnings article {
@@ -232,6 +249,7 @@
 
 .dm-k8s-runtime-table {
   margin: 2px 0 0;
+  min-width: 680px;
 }
 
 .dm-k8s-runtime-table td,
@@ -243,7 +261,9 @@
 .dm-k8s-settings-page {
   border: 1px solid var(--dm-k8s-border);
   border-radius: 4px;
-  max-width: 900px;
+  box-sizing: border-box;
+  max-width: min(900px, calc(100vw - 20px));
+  min-width: 0;
   padding: 14px 16px;
 }
 
@@ -266,6 +286,8 @@
 .dm-k8s-settings-grid input,
 .dm-k8s-settings-grid select {
   box-sizing: border-box;
+  margin-right: 0;
+  max-width: 100%;
   width: 100%;
 }
 

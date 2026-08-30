@@ -14,6 +14,10 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Keep Kubernetes pages within the visible viewport when Unraid retains its desktop minimum width.
+- Preserve readable tables with local horizontal scrolling and responsive settings fields.
+
+### 0.1.1
 - Keep the Kubernetes runtime summary embedded above Docker containers in both tabbed and non-tabbed views.
 - Add the plugin icon and human-readable Plugin Manager description.
 
