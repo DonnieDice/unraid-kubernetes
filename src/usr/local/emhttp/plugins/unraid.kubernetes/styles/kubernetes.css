@@ -35,6 +35,10 @@
   margin-bottom: 2px;
 }
 
+.dm-k8s-heading h2 {
+  margin-top: 0;
+}
+
 .dm-k8s-heading p {
   margin-top: 0;
   opacity: 0.7;
@@ -211,8 +215,34 @@
 
 .dm-k8s-docker {
   border-bottom: 1px solid var(--dm-k8s-border);
-  margin-bottom: 12px;
-  padding: 0 0 10px;
+  margin-bottom: 8px;
+  padding: 0 0 8px;
+}
+
+.dm-k8s-docker + div.title {
+  margin-top: 8px;
+}
+
+div.title.dm-k8s-docker-title {
+  box-sizing: border-box;
+  margin-bottom: 4px;
+  margin-top: 0;
+  max-width: calc(100vw - 20px);
+  min-width: 0;
+}
+
+div.title.dm-k8s-plugin-title {
+  margin-bottom: 4px;
+}
+
+.dm-k8s-plugin-assets {
+  display: none;
+}
+
+.dm-k8s-docker-title .status {
+  float: right;
+  margin: 0;
+  padding: 0;
 }
 
 .dm-k8s-docker-heading,
@@ -226,15 +256,9 @@
   min-height: 34px;
 }
 
-.dm-k8s-docker-heading h2,
 .dm-k8s-docker-heading .dm-k8s-message {
   display: inline;
   margin: 0;
-}
-
-.dm-k8s-docker-heading h2 {
-  font-size: 1.05em;
-  margin-right: 10px;
 }
 
 .dm-k8s-docker-heading .dm-k8s-message,
@@ -249,7 +273,38 @@
 
 .dm-k8s-runtime-table {
   margin: 2px 0 0;
-  min-width: 680px;
+  min-width: 0;
+}
+
+table.dm-k8s-runtime-table {
+  margin-bottom: 0;
+}
+
+.dm-k8s-docker .dm-k8s-table-wrap {
+  overflow-x: hidden;
+}
+
+.dm-k8s-runtime-table th,
+.dm-k8s-runtime-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-k8s-runtime-usage {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  white-space: nowrap;
+}
+
+.dm-k8s-runtime-usage span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dm-k8s-runtime-table .usage-disk.mm {
+  margin: 3px 0 0;
 }
 
 .dm-k8s-runtime-table td,

@@ -13,6 +13,9 @@ $status = dm_k8s_status();
 exit(
     isset($status["cluster"]["state"], $status["nodes"], $status["pods"])
     && dm_k8s_memory("1048576Ki") === "1.0 GiB"
+    && dm_k8s_cpu_millicores("125000000n") === 125
+    && dm_k8s_memory_bytes("1024Mi") === 1073741824
+    && dm_k8s_format_cpu(1250) === "1.25 cores"
     ? 0
     : 1
 );
@@ -28,6 +31,17 @@ if grep -q '^Title=' "$docker_page"; then
   echo "Docker integration must remain an untitled parent-page extension" >&2
   exit 1
 fi
+grep -q 'data-dm-k8s-docker-title' "$docker_page"
+grep -q 'class="dm-k8s-advanced">CPU &amp; Memory load</th><th>Autostart</th><th>Uptime</th>' "$docker_page"
+grep -q "'id' => \$container\['ID'\]" src/usr/local/emhttp/plugins/unraid.kubernetes/include/config.php
+grep -q 'function positionDockerView()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'function positionFullView()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'closest(".status")' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'function syncRuntimeStats()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'function syncRuntimeAdvancedView(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'function alignRuntimeColumns(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'function followRuntimeColumns()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'change.dmK8s' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'icon="kubernetes.png"' plugin/unraid.kubernetes.plg.in
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/README.md
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/images/kubernetes.png

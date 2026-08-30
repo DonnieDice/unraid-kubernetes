@@ -3,12 +3,12 @@ Type="php"
 Menu="Docker"
 Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v \"not\"')"
 ---
+<div class="title dm-k8s-docker-title" data-dm-k8s-docker-title>
+  <span class="left"><i class="fa fa-cubes title"></i>Kubernetes Containers</span>
+</div>
 <section class="dm-k8s-view dm-k8s-docker" data-dm-k8s-view="docker">
   <div class="dm-k8s-docker-heading">
-    <div>
-      <h2><i class="fa fa-fw fa-cubes"></i> Kubernetes Runtime</h2>
-      <span class="dm-k8s-message" data-dm-k8s-message>Loading cluster status...</span>
-    </div>
+    <span class="dm-k8s-message" data-dm-k8s-message>Loading cluster status...</span>
     <div class="dm-k8s-docker-actions">
       <span data-dm-k8s-docker-health></span>
       <a href="/Kubernetes">Details <i class="fa fa-fw fa-chevron-right"></i></a>
@@ -17,8 +17,12 @@ Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v
   </div>
   <div class="dm-k8s-table-wrap">
     <table class="tablesorter dm-k8s-runtime-table">
-      <thead><tr><th>Container</th><th>Kubernetes Role</th><th>Image</th><th>State</th><th>Status</th></tr></thead>
-      <tbody data-dm-k8s-runtime><tr><td colspan="5">Loading runtime containers...</td></tr></tbody>
+      <colgroup>
+        <col data-dm-k8s-col="container"><col data-dm-k8s-col="role"><col data-dm-k8s-col="image"><col data-dm-k8s-col="state">
+        <col data-dm-k8s-col="load"><col data-dm-k8s-col="autostart"><col data-dm-k8s-col="uptime">
+      </colgroup>
+      <thead><tr><th>Container</th><th>Kubernetes Role</th><th>Image</th><th>State</th><th class="dm-k8s-advanced">CPU &amp; Memory load</th><th>Autostart</th><th>Uptime</th></tr></thead>
+      <tbody data-dm-k8s-runtime><tr><td colspan="7">Loading runtime containers...</td></tr></tbody>
     </table>
   </div>
 </section>
