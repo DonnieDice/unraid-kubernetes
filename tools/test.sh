@@ -22,6 +22,16 @@ node --check src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.j
 xmllint --noout plugin/unraid.kubernetes.plg.in
 xmllint --noout plugin/unraid.kubernetes.plg ca_profile.xml plugins/*.xml
 
+docker_page=src/usr/local/emhttp/plugins/unraid.kubernetes/Kubernetes.Docker.page
+grep -qx 'Menu="Docker"' "$docker_page"
+if grep -q '^Title=' "$docker_page"; then
+  echo "Docker integration must remain an untitled parent-page extension" >&2
+  exit 1
+fi
+grep -q 'icon="kubernetes.png"' plugin/unraid.kubernetes.plg.in
+test -s src/usr/local/emhttp/plugins/unraid.kubernetes/README.md
+test -s src/usr/local/emhttp/plugins/unraid.kubernetes/images/kubernetes.png
+
 if command -v shellcheck >/dev/null 2>&1; then
   find src tools -type f \( -name '*.sh' -o -path '*/event/started' -o -path '*/event/stopping_docker' -o -name 'rc.*' \) -print0 | xargs -0 shellcheck
 fi

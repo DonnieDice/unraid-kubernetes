@@ -6,6 +6,7 @@
   author="Donnie Dice"
   version="0.1.0"
   launch="Kubernetes"
+  icon="kubernetes.png"
   pluginURL="https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg"
   min="7.1.0"
   support="https://github.com/DonnieDice/unraid-kubernetes/discussions">
