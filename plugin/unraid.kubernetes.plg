@@ -4,7 +4,7 @@
 <PLUGIN
   name="unraid.kubernetes"
   author="Donnie Dice"
-  version="0.1.1"
+  version="0.1.2"
   launch="Kubernetes"
   icon="kubernetes.png"
   pluginURL="https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg"
@@ -13,6 +13,10 @@
 
 <CHANGES>
 <![CDATA[
+### 0.1.2
+- Keep Kubernetes pages within the visible viewport when Unraid retains its desktop minimum width.
+- Preserve readable tables with local horizontal scrolling and responsive settings fields.
+
 ### 0.1.1
 - Keep the Kubernetes runtime summary embedded above Docker containers in both tabbed and non-tabbed views.
 - Add the plugin icon and human-readable Plugin Manager description.
@@ -28,18 +32,18 @@
 <SHA256>06d8f25bc3a971c4eb29e0ff08429b180402db0f4dec838c9eac427e296800a0</SHA256>
 </FILE>
 
-<FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.1-noarch-1.txz">
-<URL>https://github.com/DonnieDice/unraid-kubernetes/releases/download/v0.1.1/unraid.kubernetes-0.1.1-noarch-1.txz</URL>
-<SHA256>4172aa0932757baeec5869e82335b894bb5400a49bcf5e2898b665ef151f0ef7</SHA256>
+<FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.2-noarch-1.txz">
+<URL>https://github.com/DonnieDice/unraid-kubernetes/releases/download/v0.1.2/unraid.kubernetes-0.1.2-noarch-1.txz</URL>
+<SHA256>4f3bcfc46b2800c35a3336906f79e3f8a942b7980e1ca9b2a4d0411a18481c3a</SHA256>
 </FILE>
 
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.1-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.2-noarch-1.txz
 install -m 0755 /boot/config/plugins/unraid.kubernetes/k3d-v5.9.0-linux-amd64 /usr/local/bin/k3d
 /usr/local/emhttp/plugins/unraid.kubernetes/scripts/install.sh
-rm -f $(ls /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-*-noarch-1.txz 2>/dev/null | grep -v '0.1.1')
+rm -f $(ls /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-*-noarch-1.txz 2>/dev/null | grep -v '0.1.2')
 ]]>
 </INLINE>
 </FILE>
