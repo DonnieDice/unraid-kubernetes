@@ -27,6 +27,7 @@ try {
             'k3s_image' => $config['K3S_IMAGE'],
             'k3d_config' => $config['K3D_CONFIG'],
             'kubeconfig' => $config['KUBECONFIG'],
+            'show_metrics' => $config['SHOW_METRICS'],
         ], JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -35,12 +36,17 @@ try {
     if (!in_array($provider, ['k3d', 'external'], true)) {
         throw new InvalidArgumentException('Invalid provider');
     }
+    $showMetrics = (string)($_POST['show_metrics'] ?? '');
+    if (!in_array($showMetrics, ['yes', 'no'], true)) {
+        throw new InvalidArgumentException('Invalid resource metrics setting');
+    }
     $updates = [
         'PROVIDER' => $provider,
         'CLUSTER_NAME' => dm_k8s_post_setting('cluster_name', '/^[a-z0-9][a-z0-9.-]{0,62}$/'),
         'K3S_IMAGE' => dm_k8s_post_setting('k3s_image', '/^[A-Za-z0-9._\/:@-]+$/'),
         'K3D_CONFIG' => dm_k8s_post_setting('k3d_config', '/^\/[A-Za-z0-9._ \/-]+$/'),
         'KUBECONFIG' => dm_k8s_post_setting('kubeconfig', '/^\/[A-Za-z0-9._ \/-]+$/'),
+        'SHOW_METRICS' => $showMetrics,
     ];
     $stored = is_readable($settingsPath)
         ? parse_ini_file($settingsPath, false, INI_SCANNER_RAW)
@@ -49,7 +55,7 @@ try {
     $next = array_merge($stored, $updates);
     $order = [
         'PROVIDER', 'CLUSTER_NAME', 'DATA_ROOT', 'K3D_CONFIG', 'TOKEN_FILE',
-        'DATASTORE_DIR', 'STORAGE_DIR', 'KUBECONFIG_DIR', 'K3S_IMAGE', 'KUBECONFIG',
+        'DATASTORE_DIR', 'STORAGE_DIR', 'KUBECONFIG_DIR', 'K3S_IMAGE', 'KUBECONFIG', 'SHOW_METRICS',
     ];
     $lines = [];
     foreach ($order as $key) {

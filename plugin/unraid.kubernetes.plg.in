@@ -14,6 +14,12 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Restore the Kubernetes runtime section above Docker containers with a native page header.
+- Show live runtime CPU and memory usage with Docker Advanced View.
+- Show optional live node, namespace, and pod usage from the Kubernetes Metrics API.
+- Tighten Kubernetes page spacing and runtime row density.
+
+### 0.1.2
 - Keep Kubernetes pages within the visible viewport when Unraid retains its desktop minimum width.
 - Preserve readable tables with local horizontal scrolling and responsive settings fields.
 

@@ -19,6 +19,7 @@ function dm_k8s_config(): array
         'K3D_CONFIG' => '/mnt/user/appdata/unraid-kubernetes/config/k3d-unraid-k3s.yaml',
         'K3S_IMAGE' => 'rancher/k3s:v1.36.1-k3s1',
         'KUBECONFIG' => '/boot/config/plugins/unraid.kubernetes/external-kubeconfig.yaml',
+        'SHOW_METRICS' => 'yes',
     ];
     $settings = dm_k8s_settings_path();
     $stored = is_readable($settings)
@@ -31,6 +32,9 @@ function dm_k8s_config(): array
     }
     if (!in_array($config['PROVIDER'], ['k3d', 'external'], true)) {
         throw new RuntimeException('Invalid Kubernetes provider in plugin settings');
+    }
+    if (!in_array($config['SHOW_METRICS'], ['yes', 'no'], true)) {
+        throw new RuntimeException('Invalid resource metrics setting');
     }
     foreach (['DATA_ROOT', 'K3D_CONFIG', 'KUBECONFIG'] as $key) {
         if (!str_starts_with((string)$config[$key], '/')) {
@@ -75,6 +79,53 @@ function dm_k8s_memory(string $value): string
     return $value;
 }
 
+function dm_k8s_cpu_millicores(string $value): int
+{
+    if (preg_match('/^(\d+)n$/', $value, $matches)) {
+        return (int)$matches[1] > 0 ? max(1, (int)round(((int)$matches[1]) / 1000000)) : 0;
+    }
+    if (preg_match('/^(\d+)u$/', $value, $matches)) {
+        return (int)$matches[1] > 0 ? max(1, (int)round(((int)$matches[1]) / 1000)) : 0;
+    }
+    if (preg_match('/^(\d+)m$/', $value, $matches)) {
+        return (int)$matches[1];
+    }
+    return (int)round(((float)$value) * 1000);
+}
+
+function dm_k8s_memory_bytes(string $value): int
+{
+    if (!preg_match('/^([0-9.]+)(Ki|Mi|Gi|Ti)?$/', $value, $matches)) {
+        return 0;
+    }
+    $multipliers = ['' => 1, 'Ki' => 1024, 'Mi' => 1024 ** 2, 'Gi' => 1024 ** 3, 'Ti' => 1024 ** 4];
+    return (int)round(((float)$matches[1]) * $multipliers[$matches[2] ?? '']);
+}
+
+function dm_k8s_format_cpu(int $millicores): string
+{
+    if ($millicores >= 1000) {
+        return number_format($millicores / 1000, 2) . ' cores';
+    }
+    return number_format($millicores / 10, 1) . '% core';
+}
+
+function dm_k8s_format_memory(int $bytes): string
+{
+    if ($bytes >= 1024 ** 3) {
+        return number_format($bytes / (1024 ** 3), 1) . ' GiB';
+    }
+    return number_format($bytes / (1024 ** 2), 0) . ' MiB';
+}
+
+function dm_k8s_format_usage(string $value, int $used, int $capacity): string
+{
+    if ($capacity <= 0) {
+        return $value;
+    }
+    return sprintf('%s (%d%%)', $value, (int)round(($used / $capacity) * 100));
+}
+
 /** @return array<string, mixed> */
 function dm_k8s_status(): array
 {
@@ -106,6 +157,7 @@ function dm_k8s_status(): array
         'namespaces' => [],
         'warnings' => [],
         'runtime' => [],
+        'metrics_enabled' => $config['SHOW_METRICS'] === 'yes',
         'error' => null,
         'updated_at' => gmdate(DATE_ATOM),
     ];
@@ -124,6 +176,7 @@ function dm_k8s_status(): array
                 continue;
             }
             $response['runtime'][] = [
+                'id' => $container['ID'] ?? '',
                 'name' => $container['Names'] ?? 'unknown',
                 'image' => $container['Image'] ?? 'unknown',
                 'state' => $container['State'] ?? 'unknown',
@@ -132,7 +185,7 @@ function dm_k8s_status(): array
         }
     }
 
-    $nodesCode = $podsCode = $eventsCode = 0;
+    $nodesCode = $podsCode = $eventsCode = $nodeMetricsCode = $podMetricsCode = 0;
     $nodes = json_decode(dm_k8s_kubectl($config, [
         'get', 'nodes', '-o', 'json',
     ], $nodesCode), true);
@@ -143,6 +196,15 @@ function dm_k8s_status(): array
         'get', 'events', '--all-namespaces',
         '--field-selector', 'type=Warning', '--sort-by=.lastTimestamp', '-o', 'json',
     ], $eventsCode), true);
+    $nodeMetrics = $podMetrics = ['items' => []];
+    if ($config['SHOW_METRICS'] === 'yes') {
+        $nodeMetrics = json_decode(dm_k8s_kubectl($config, [
+            'get', '--raw=/apis/metrics.k8s.io/v1beta1/nodes',
+        ], $nodeMetricsCode), true);
+        $podMetrics = json_decode(dm_k8s_kubectl($config, [
+            'get', '--raw=/apis/metrics.k8s.io/v1beta1/pods',
+        ], $podMetricsCode), true);
+    }
 
     if ($nodesCode !== 0 || $podsCode !== 0 || !is_array($nodes) || !is_array($pods)) {
         $response['cluster']['state'] = 'Degraded';
@@ -151,6 +213,30 @@ function dm_k8s_status(): array
     }
     if ($eventsCode !== 0 || !is_array($events)) {
         $events = ['items' => []];
+    }
+    if ($nodeMetricsCode !== 0 || !is_array($nodeMetrics)) {
+        $nodeMetrics = ['items' => []];
+    }
+    if ($podMetricsCode !== 0 || !is_array($podMetrics)) {
+        $podMetrics = ['items' => []];
+    }
+
+    $nodeUsage = [];
+    foreach (($nodeMetrics['items'] ?? []) as $metric) {
+        $nodeUsage[$metric['metadata']['name'] ?? ''] = [
+            'cpu' => dm_k8s_cpu_millicores((string)($metric['usage']['cpu'] ?? '0')),
+            'memory' => dm_k8s_memory_bytes((string)($metric['usage']['memory'] ?? '0')),
+        ];
+    }
+    $podUsage = [];
+    foreach (($podMetrics['items'] ?? []) as $metric) {
+        $cpu = $memory = 0;
+        foreach (($metric['containers'] ?? []) as $container) {
+            $cpu += dm_k8s_cpu_millicores((string)($container['usage']['cpu'] ?? '0'));
+            $memory += dm_k8s_memory_bytes((string)($container['usage']['memory'] ?? '0'));
+        }
+        $key = ($metric['metadata']['namespace'] ?? 'default') . '/' . ($metric['metadata']['name'] ?? '');
+        $podUsage[$key] = ['cpu' => $cpu, 'memory' => $memory];
     }
 
     foreach (($nodes['items'] ?? []) as $node) {
@@ -166,13 +252,17 @@ function dm_k8s_status(): array
                 $roles[] = substr($label, strlen('node-role.kubernetes.io/')) ?: 'worker';
             }
         }
+        $name = $node['metadata']['name'] ?? 'unknown';
+        $usage = $nodeUsage[$name] ?? null;
+        $cpuCapacity = dm_k8s_cpu_millicores((string)($node['status']['capacity']['cpu'] ?? '0'));
+        $memoryCapacity = dm_k8s_memory_bytes((string)($node['status']['capacity']['memory'] ?? '0'));
         $response['nodes'][] = [
-            'name' => $node['metadata']['name'] ?? 'unknown',
+            'name' => $name,
             'ready' => $ready,
             'roles' => $roles ?: ['worker'],
             'version' => $node['status']['nodeInfo']['kubeletVersion'] ?? 'unknown',
-            'cpu' => $node['status']['capacity']['cpu'] ?? '-',
-            'memory' => dm_k8s_memory((string)($node['status']['capacity']['memory'] ?? '-')),
+            'cpu' => $usage ? dm_k8s_format_usage(dm_k8s_format_cpu($usage['cpu']), $usage['cpu'], $cpuCapacity) : '-',
+            'memory' => $usage ? dm_k8s_format_usage(dm_k8s_format_memory($usage['memory']), $usage['memory'], $memoryCapacity) : '-',
         ];
     }
 
@@ -188,21 +278,32 @@ function dm_k8s_status(): array
         }
         $totalContainers = count($pod['spec']['containers'] ?? []);
         $isReady = $totalContainers > 0 && $readyContainers === $totalContainers && $phase === 'Running';
-        $namespaceCounts[$namespace] ??= ['pods' => 0, 'ready' => 0];
+        $usage = $podUsage[$namespace . '/' . ($pod['metadata']['name'] ?? '')] ?? null;
+        $namespaceCounts[$namespace] ??= ['pods' => 0, 'ready' => 0, 'cpu' => 0, 'memory' => 0];
         $namespaceCounts[$namespace]['pods']++;
         $namespaceCounts[$namespace]['ready'] += $isReady ? 1 : 0;
+        $namespaceCounts[$namespace]['cpu'] += $usage['cpu'] ?? 0;
+        $namespaceCounts[$namespace]['memory'] += $usage['memory'] ?? 0;
         $response['pods'][] = [
             'namespace' => $namespace,
             'name' => $pod['metadata']['name'] ?? 'unknown',
             'ready' => "{$readyContainers}/{$totalContainers}",
             'phase' => $phase,
             'restarts' => $restarts,
+            'cpu' => $usage ? dm_k8s_format_cpu($usage['cpu']) : '-',
+            'memory' => $usage ? dm_k8s_format_memory($usage['memory']) : '-',
             'node' => $pod['spec']['nodeName'] ?? '-',
         ];
     }
     ksort($namespaceCounts);
     foreach ($namespaceCounts as $name => $counts) {
-        $response['namespaces'][] = ['name' => $name] + $counts;
+        $response['namespaces'][] = [
+            'name' => $name,
+            'pods' => $counts['pods'],
+            'ready' => $counts['ready'],
+            'cpu' => dm_k8s_format_cpu($counts['cpu']),
+            'memory' => dm_k8s_format_memory($counts['memory']),
+        ];
     }
 
     $warningCutoff = time() - 900;

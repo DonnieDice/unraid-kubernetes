@@ -14,6 +14,7 @@ $_POST = [
     'k3s_image' => 'rancher/k3s:v1.36.1-k3s1',
     'k3d_config' => '/mnt/user/appdata/test/config.yaml',
     'kubeconfig' => '/mnt/user/appdata/test/kubeconfig.yaml',
+    'show_metrics' => 'no',
 ];
 
 ob_start();
@@ -24,6 +25,7 @@ $saved = parse_ini_file($fixturePath, false, INI_SCANNER_RAW);
 
 if (($response['ok'] ?? false) !== true
     || ($saved['CLUSTER_NAME'] ?? '') !== 'test-unraid'
+    || ($saved['SHOW_METRICS'] ?? '') !== 'no'
     || ($saved['TOKEN_FILE'] ?? '') === '') {
     fwrite(STDERR, 'Settings round-trip failed: response=' . json_encode($response)
         . ', cluster=' . ($saved['CLUSTER_NAME'] ?? 'missing')
