@@ -198,10 +198,6 @@
   padding: 0 0 10px;
 }
 
-div.title.dm-k8s-plugin-title {
-  margin-bottom: 4px;
-}
-
 .dm-k8s-docker-heading,
 .dm-k8s-docker-actions {
   align-items: center;

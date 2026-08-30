@@ -114,9 +114,6 @@
   }
 
   function hideEmptyTabs(tabs = document.querySelector(".tabs")) {
-    document.querySelectorAll('[data-dm-k8s-view="full"], [data-dm-k8s-view="docker"]').forEach((view) => {
-      view.closest(".content")?.querySelector(":scope > .title")?.classList.add("dm-k8s-plugin-title");
-    });
     if (tabs && tabs.childElementCount === 0 && tabs.textContent.trim() === "") {
       tabs.hidden = true;
     }

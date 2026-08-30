@@ -1,7 +1,6 @@
 Author="Donnie Dice"
-Title="Kubernetes"
 Type="php"
-Menu="Docker:0"
+Menu="Docker"
 Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v \"not\"')"
 ---
 <section class="dm-k8s-view dm-k8s-docker" data-dm-k8s-view="docker">
