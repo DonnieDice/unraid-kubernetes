@@ -13,6 +13,9 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Inset only the Docker Kubernetes status line while preserving native table alignment.
+
+### 0.1.7
 - Increase Kubernetes page and Docker card edge gutters.
 - Keep Dashboard warning messages wrapped within narrow and custom tile layouts.
 - Remove the plugin column setting and defer placement to Unraid's native sortable layout.

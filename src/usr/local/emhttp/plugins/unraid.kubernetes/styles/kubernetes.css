@@ -315,7 +315,7 @@
 .dm-k8s-docker {
   border-bottom: 1px solid var(--dm-k8s-border);
   margin-bottom: 8px;
-  padding: 0 var(--dm-k8s-gutter) 8px;
+  padding: 0 0 8px;
 }
 
 .dm-k8s-docker + div.title {
@@ -352,9 +352,12 @@ div.title.dm-k8s-plugin-title {
 }
 
 .dm-k8s-docker-heading {
+  box-sizing: border-box;
   flex-wrap: wrap;
   justify-content: space-between;
   min-height: 34px;
+  padding-inline: var(--dm-k8s-gutter);
+  width: 100%;
 }
 
 .dm-k8s-docker-heading .dm-k8s-message {
