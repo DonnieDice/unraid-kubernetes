@@ -25,7 +25,6 @@ function dm_k8s_config(): array
         'SHOW_DOCKER_HEADER' => 'yes',
         'CPU_DISPLAY_UNIT' => 'auto',
         'REFRESH_INTERVAL' => '15',
-        'DASHBOARD_COLUMN' => '2',
     ];
     $settings = dm_k8s_settings_path();
     $stored = is_readable($settings)
@@ -49,9 +48,6 @@ function dm_k8s_config(): array
     }
     if (!in_array($config['REFRESH_INTERVAL'], ['5', '10', '15', '30', '60'], true)) {
         throw new RuntimeException('Invalid refresh interval setting');
-    }
-    if (!in_array($config['DASHBOARD_COLUMN'], ['1', '2', '3', '4'], true)) {
-        throw new RuntimeException('Invalid Dashboard column setting');
     }
     foreach (['DATA_ROOT', 'K3D_CONFIG', 'KUBECONFIG'] as $key) {
         if (!str_starts_with((string)$config[$key], '/')) {

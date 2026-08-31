@@ -41,12 +41,6 @@ Code="f1b3"
           <option value="30">30 seconds</option>
           <option value="60">60 seconds (lowest load)</option>
         </select></label>
-        <label><span>Dashboard widget column</span><select name="dashboard_column">
-          <option value="1">Column 1</option>
-          <option value="2">Column 2 (default)</option>
-          <option value="3">Column 3</option>
-          <option value="4">Column 4</option>
-        </select></label>
       </div>
     </div>
     <div class="dm-k8s-settings-section">

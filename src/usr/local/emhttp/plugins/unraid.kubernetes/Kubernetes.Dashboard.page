@@ -3,10 +3,8 @@ Icon="cubes"
 Cond="exec(\"grep -q '^SHOW_DASHBOARD_WIDGET=.no' /boot/config/plugins/unraid.kubernetes/settings.cfg 2>/dev/null || echo yes\")"
 ---
 <?php
-$settings = parse_ini_file('/boot/config/plugins/unraid.kubernetes/settings.cfg', false, INI_SCANNER_RAW);
-$column = is_array($settings) ? (string)($settings['DASHBOARD_COLUMN'] ?? '2') : '2';
-$column = in_array($column, ['1', '2', '3', '4'], true) ? $column : '2';
-$mytiles['unraid-kubernetes']["column{$column}"] = <<<'HTML'
+// Unraid requires a source column; its saved sortable layout controls the actual placement.
+$mytiles['unraid-kubernetes']['column2'] = <<<'HTML'
 <tbody class="mixed dm-k8s-view dm-k8s-dashboard" data-dm-k8s-view="dashboard" title="Kubernetes Cluster">
   <tr><td>
     <div class="dm-k8s-dashboard-container">

@@ -72,8 +72,8 @@ kubeconfig, and local-path storage for deliberate recovery or deletion.
 - Dedicated **Kubernetes** page with cluster, node, pod, namespace, and warning
   status.
 - Movable Kubernetes dashboard tile using Unraid's native `$mytiles` API.
-- Configurable initial Dashboard placement in columns 1 through 4, with
-  tile-width-aware responsive layout.
+- Tile-width-aware Dashboard layout that follows Unraid's native sortable
+  column placement.
 - Compact Kubernetes summary and k3d runtime-container list at the top of the
   Docker page.
 - Guarded start, stop, and restart controls through Unraid's CSRF-protected
