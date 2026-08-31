@@ -55,6 +55,9 @@ if grep -Rqs 'DASHBOARD_COLUMN' README.md src tests; then
 fi
 test "$(xmllint --xpath 'string(/Plugin/Project)' plugins/unraid-kubernetes.xml)" = 'https://github.com/DonnieDice/unraid-kubernetes'
 test "$(xmllint --xpath 'string(/Plugin/ReadMe)' plugins/unraid-kubernetes.xml)" = 'https://github.com/DonnieDice/unraid-kubernetes#readme'
+test "$(xmllint --xpath 'string(/Plugin/Support)' plugins/unraid-kubernetes.xml)" = 'https://forums.unraid.net/topic/200438-plugin-unraid-kubernetes-support/'
+test "$(xmllint --xpath 'string(/CommunityApplications/Forum)' ca_profile.xml)" = 'https://forums.unraid.net/topic/200438-plugin-unraid-kubernetes-support/'
+grep -q 'https://forums.unraid.net/topic/200438-plugin-unraid-kubernetes-support/' src/usr/local/emhttp/plugins/unraid.kubernetes/KubernetesSettings.page
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/README.md
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/images/kubernetes.png
 

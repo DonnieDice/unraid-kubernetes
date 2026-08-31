@@ -11,6 +11,7 @@ test:
     - apk add --no-cache bash libxml2-utils nodejs php shellcheck
   script:
     - bash ./tools/test.sh
+    - node --test ./tests/layout-regression.test.js
 
 package:
   stage: package
