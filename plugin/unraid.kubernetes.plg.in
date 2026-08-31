@@ -13,6 +13,10 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Move installation help and bug reports to GitHub Issues.
+- Adopt Unraid-compatible date-based versions for reliable automatic updates.
+
+### 0.1.10
 - Align Dashboard Settings and Open controls with Unraid's expand/collapse control.
 - Align the Settings save action with the native form controls.
 - Remove extra vertical space above the Dashboard summary.
