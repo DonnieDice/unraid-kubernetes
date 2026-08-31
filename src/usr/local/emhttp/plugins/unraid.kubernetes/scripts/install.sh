@@ -19,6 +19,11 @@ STORAGE_DIR="/mnt/user/appdata/unraid-kubernetes/storage"
 KUBECONFIG_DIR="/mnt/user/appdata/unraid-kubernetes/kubeconfig"
 K3S_IMAGE="rancher/k3s:v1.36.1-k3s1"
 KUBECONFIG="/mnt/user/appdata/unraid-kubernetes/kubeconfig/unraid-k3s.yaml"
+SHOW_METRICS="yes"
+SHOW_DASHBOARD_WIDGET="yes"
+SHOW_KUBERNETES_PAGE="yes"
+SHOW_DOCKER_HEADER="yes"
+CPU_DISPLAY_UNIT="auto"
 EOF
   chmod 0600 "$settings"
 fi

@@ -15,6 +15,10 @@ $_POST = [
     'k3d_config' => '/mnt/user/appdata/test/config.yaml',
     'kubeconfig' => '/mnt/user/appdata/test/kubeconfig.yaml',
     'show_metrics' => 'no',
+    'show_dashboard_widget' => 'no',
+    'show_kubernetes_page' => 'yes',
+    'show_docker_header' => 'no',
+    'cpu_display_unit' => 'cores',
 ];
 
 ob_start();
@@ -26,6 +30,10 @@ $saved = parse_ini_file($fixturePath, false, INI_SCANNER_RAW);
 if (($response['ok'] ?? false) !== true
     || ($saved['CLUSTER_NAME'] ?? '') !== 'test-unraid'
     || ($saved['SHOW_METRICS'] ?? '') !== 'no'
+    || ($saved['SHOW_DASHBOARD_WIDGET'] ?? '') !== 'no'
+    || ($saved['SHOW_KUBERNETES_PAGE'] ?? '') !== 'yes'
+    || ($saved['SHOW_DOCKER_HEADER'] ?? '') !== 'no'
+    || ($saved['CPU_DISPLAY_UNIT'] ?? '') !== 'cores'
     || ($saved['TOKEN_FILE'] ?? '') === '') {
     fwrite(STDERR, 'Settings round-trip failed: response=' . json_encode($response)
         . ', cluster=' . ($saved['CLUSTER_NAME'] ?? 'missing')

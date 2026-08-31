@@ -1,7 +1,7 @@
 Author="Donnie Dice"
 Type="php"
 Menu="Docker"
-Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v \"not\"')"
+Cond="$var['fsState'] == 'Started' && exec('/etc/rc.d/rc.docker status | grep -v \"not\"') && exec(\"grep -q '^SHOW_DOCKER_HEADER=.no' /boot/config/plugins/unraid.kubernetes/settings.cfg 2>/dev/null || echo yes\")"
 ---
 <div class="title dm-k8s-docker-title" data-dm-k8s-docker-title>
   <span class="left"><i class="fa fa-cubes title"></i>Kubernetes Containers</span>
