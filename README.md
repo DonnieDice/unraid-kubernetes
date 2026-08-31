@@ -124,8 +124,12 @@ Existing configuration and data files are never overwritten.
 
 ## Project
 
-- Public source and releases: `https://github.com/DonnieDice/unraid-kubernetes`
-- Public support: `https://github.com/DonnieDice/unraid-kubernetes/discussions`
+- [Source and releases](https://github.com/DonnieDice/unraid-kubernetes)
+- [Help and support](https://github.com/DonnieDice/unraid-kubernetes/discussions)
+
+GitHub Discussions is the project's support forum. Community Applications may
+still report that an Unraid forum support thread is absent because its template
+validator only recognizes `forums.unraid.net` threads.
 
 GitLab is the development and CI/CD source of truth. Successful changes flow to
 GitHub as the downstream public mirror used for distribution and releases.
@@ -148,7 +152,7 @@ Unraid uses packaged file modification times to invalidate browser assets.
 ## Security
 
 - Kubernetes credentials never pass through the browser.
-- The status endpoint invokes only fixed Docker and k3d commands.
+- The status endpoint invokes only fixed Docker and kubectl commands.
 - Lifecycle actions are allowlisted and protected by Unraid's global CSRF
   middleware.
 - Runtime settings are validated before use by root-privileged scripts.

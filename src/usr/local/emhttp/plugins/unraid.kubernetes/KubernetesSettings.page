@@ -67,7 +67,11 @@ Code="f1b3"
         <p>Removing the plugin preserves its datastore, token, kubeconfig, and local-path storage so recovery or deletion remains deliberate.</p>
       </article>
     </div>
-    <p><a href="https://github.com/donniedice/unraid-kubernetes" target="_blank" rel="noopener"><i class="fa fa-fw fa-github"></i> Documentation and source</a></p>
+    <p>
+      <a href="https://github.com/DonnieDice/unraid-kubernetes" target="_blank" rel="noopener"><i class="fa fa-fw fa-github"></i> Documentation and source</a>
+      &nbsp;&middot;&nbsp;
+      <a href="https://github.com/DonnieDice/unraid-kubernetes/discussions" target="_blank" rel="noopener"><i class="fa fa-fw fa-comments"></i> Help and support</a>
+    </p>
   </div>
 </section>
 <link rel="stylesheet" href="<?autov('/plugins/unraid.kubernetes/styles/kubernetes.css')?>">
