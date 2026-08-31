@@ -6,6 +6,7 @@ cd "$root"
 
 while IFS= read -r file; do bash -n "$file"; done < <(find src tools -type f \( -name '*.sh' -o -path '*/event/started' -o -path '*/event/stopping_docker' -o -name 'rc.*' \))
 while IFS= read -r file; do php -l "$file"; done < <(find src -type f -name '*.php')
+php -l src/usr/local/emhttp/plugins/unraid.kubernetes/Kubernetes.Dashboard.page
 # shellcheck disable=SC2016
 UNRAID_K8S_SETTINGS="$root/tests/fixtures/tower.settings.cfg" php -r '
 require "src/usr/local/emhttp/plugins/unraid.kubernetes/include/config.php";
@@ -39,12 +40,17 @@ grep -q "'id' => \$container\['ID'\]" src/usr/local/emhttp/plugins/unraid.kubern
 grep -q 'function positionDockerView()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function positionFullView()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'closest(".status")' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
-grep -q 'function syncRuntimeStats()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'container.memory_usage' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q 'function setRefreshInterval' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function syncRuntimeAdvancedView(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function alignRuntimeColumns(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function followRuntimeColumns()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'change.dmK8s' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'icon="kubernetes.png"' plugin/unraid.kubernetes.plg.in
+grep -q 'launch="Settings/KubernetesSettings"' plugin/unraid.kubernetes.plg.in
+grep -qx 'Menu="Tasks:65"' src/usr/local/emhttp/plugins/unraid.kubernetes/Kubernetes.page
+test "$(xmllint --xpath 'string(/Plugin/Project)' plugins/unraid-kubernetes.xml)" = 'https://github.com/DonnieDice/unraid-kubernetes'
+test "$(xmllint --xpath 'string(/Plugin/ReadMe)' plugins/unraid-kubernetes.xml)" = 'https://github.com/DonnieDice/unraid-kubernetes#readme'
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/README.md
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/images/kubernetes.png
 

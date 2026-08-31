@@ -24,6 +24,8 @@ function dm_k8s_config(): array
         'SHOW_KUBERNETES_PAGE' => 'yes',
         'SHOW_DOCKER_HEADER' => 'yes',
         'CPU_DISPLAY_UNIT' => 'auto',
+        'REFRESH_INTERVAL' => '15',
+        'DASHBOARD_COLUMN' => '2',
     ];
     $settings = dm_k8s_settings_path();
     $stored = is_readable($settings)
@@ -44,6 +46,12 @@ function dm_k8s_config(): array
     }
     if (!in_array($config['CPU_DISPLAY_UNIT'], ['auto', 'percent', 'cores'], true)) {
         throw new RuntimeException('Invalid CPU display unit setting');
+    }
+    if (!in_array($config['REFRESH_INTERVAL'], ['5', '10', '15', '30', '60'], true)) {
+        throw new RuntimeException('Invalid refresh interval setting');
+    }
+    if (!in_array($config['DASHBOARD_COLUMN'], ['1', '2', '3', '4'], true)) {
+        throw new RuntimeException('Invalid Dashboard column setting');
     }
     foreach (['DATA_ROOT', 'K3D_CONFIG', 'KUBECONFIG'] as $key) {
         if (!str_starts_with((string)$config[$key], '/')) {
@@ -167,6 +175,7 @@ function dm_k8s_status(): array
         'warnings' => [],
         'runtime' => [],
         'metrics_enabled' => $config['SHOW_METRICS'] === 'yes',
+        'refresh_interval' => (int)$config['REFRESH_INTERVAL'],
         'error' => null,
         'updated_at' => gmdate(DATE_ATOM),
     ];
@@ -190,7 +199,38 @@ function dm_k8s_status(): array
                 'image' => $container['Image'] ?? 'unknown',
                 'state' => $container['State'] ?? 'unknown',
                 'status' => $container['Status'] ?? '',
+                'cpu' => '-',
+                'memory' => '-',
+                'memory_usage' => '',
             ];
+        }
+
+        $runtimeIds = array_values(array_filter(array_column($response['runtime'], 'id')));
+        if ($runtimeIds !== []) {
+            $statsRows = dm_k8s_run(array_merge([
+                '/usr/bin/docker', 'stats', '--no-stream', '--format', '{{json .}}',
+            ], $runtimeIds));
+            $statsByContainer = [];
+            foreach (array_filter(explode("\n", $statsRows)) as $statsRow) {
+                $stats = json_decode($statsRow, true);
+                if (!is_array($stats)) {
+                    continue;
+                }
+                foreach (['Container', 'ID', 'Name'] as $key) {
+                    if (!empty($stats[$key])) {
+                        $statsByContainer[(string)$stats[$key]] = $stats;
+                    }
+                }
+            }
+            foreach ($response['runtime'] as &$container) {
+                $stats = $statsByContainer[$container['id']] ?? $statsByContainer[$container['name']] ?? null;
+                if ($stats !== null) {
+                    $container['cpu'] = $stats['CPUPerc'] ?? '-';
+                    $container['memory'] = $stats['MemPerc'] ?? '-';
+                    $container['memory_usage'] = $stats['MemUsage'] ?? '';
+                }
+            }
+            unset($container);
         }
     }
 

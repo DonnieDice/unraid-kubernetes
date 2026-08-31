@@ -9,36 +9,62 @@ Code="f1b3"
   <h2>Unraid Kubernetes Settings</h2>
   <p>Configure how the Unraid plugin connects to and manages Kubernetes. Generated k3d containers remain owned by k3d and should not be recreated through Docker Edit.</p>
   <form data-dm-k8s-settings-form>
-    <div class="dm-k8s-settings-grid">
-      <label><span>Provider</span><select name="provider">
-        <option value="k3d">Local k3d (managed)</option>
-        <option value="external">External K3S (read-only)</option>
-      </select></label>
-      <label><span>Cluster name</span><input type="text" name="cluster_name" required></label>
-      <label><span>Show resource metrics</span><select name="show_metrics">
-        <option value="yes">Yes (recommended)</option>
-        <option value="no">No</option>
-      </select></label>
-      <label><span>CPU display unit</span><select name="cpu_display_unit">
-        <option value="auto">Automatic</option>
-        <option value="percent">% core</option>
-        <option value="cores">Cores</option>
-      </select></label>
-      <label><span>Show Dashboard widget</span><select name="show_dashboard_widget">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select></label>
-      <label><span>Show Kubernetes page</span><select name="show_kubernetes_page">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select></label>
-      <label><span>Show Docker page Kubernetes panel</span><select name="show_docker_header">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select></label>
-      <label class="dm-k8s-settings-wide"><span>K3S image</span><input type="text" name="k3s_image" required></label>
-      <label class="dm-k8s-settings-wide"><span>k3d config path</span><input type="text" name="k3d_config" required></label>
-      <label class="dm-k8s-settings-wide"><span>External kubeconfig path</span><input type="text" name="kubeconfig" required></label>
+    <div class="dm-k8s-settings-section">
+      <h3>Cluster</h3>
+      <div class="dm-k8s-settings-grid">
+        <label><span>Provider</span><select name="provider">
+          <option value="k3d">Local k3d (managed)</option>
+          <option value="external">External K3S (read-only)</option>
+        </select></label>
+        <label><span>Cluster name</span><input type="text" name="cluster_name" required></label>
+        <label class="dm-k8s-settings-wide"><span>K3S image</span><input type="text" name="k3s_image" required></label>
+        <label class="dm-k8s-settings-wide"><span>k3d config path</span><input type="text" name="k3d_config" required></label>
+        <label class="dm-k8s-settings-wide"><span>External kubeconfig path</span><input type="text" name="kubeconfig" required></label>
+      </div>
+    </div>
+    <div class="dm-k8s-settings-section">
+      <h3>Display</h3>
+      <div class="dm-k8s-settings-grid">
+        <label><span>Show resource metrics</span><select name="show_metrics">
+          <option value="yes">Yes (recommended)</option>
+          <option value="no">No</option>
+        </select></label>
+        <label><span>CPU display unit</span><select name="cpu_display_unit">
+          <option value="auto">Automatic</option>
+          <option value="percent">% core</option>
+          <option value="cores">Cores</option>
+        </select></label>
+        <label><span>Status and metrics refresh</span><select name="refresh_interval">
+          <option value="5">5 seconds (highest load)</option>
+          <option value="10">10 seconds</option>
+          <option value="15">15 seconds (recommended)</option>
+          <option value="30">30 seconds</option>
+          <option value="60">60 seconds (lowest load)</option>
+        </select></label>
+        <label><span>Dashboard widget column</span><select name="dashboard_column">
+          <option value="1">Column 1</option>
+          <option value="2">Column 2 (default)</option>
+          <option value="3">Column 3</option>
+          <option value="4">Column 4</option>
+        </select></label>
+      </div>
+    </div>
+    <div class="dm-k8s-settings-section">
+      <h3>Visibility</h3>
+      <div class="dm-k8s-settings-grid">
+        <label><span>Show Dashboard widget</span><select name="show_dashboard_widget">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select></label>
+        <label><span>Show Kubernetes page</span><select name="show_kubernetes_page">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select></label>
+        <label><span>Show Docker page Kubernetes panel</span><select name="show_docker_header">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select></label>
+      </div>
     </div>
     <p class="dm-k8s-settings-help">Saving does not rewrite an existing k3d config, token, or datastore. Restart the local cluster only when a changed setting requires it.</p>
     <div class="dm-k8s-settings-footer">
@@ -48,7 +74,7 @@ Code="f1b3"
   </form>
   <div class="dm-k8s-settings-docs">
     <h2>About Unraid Kubernetes</h2>
-    <p>This native Unraid plugin installs, adopts, manages, and monitors a k3d/K3S cluster without a VM or separate web server. Visible status updates automatically every 15 seconds.</p>
+    <p>This native Unraid plugin installs, adopts, manages, and monitors a k3d/K3S cluster without a VM or separate web server. Visible status and runtime usage update at the configured refresh interval.</p>
     <div class="dm-k8s-settings-doc-grid">
       <article>
         <h3>Where It Appears</h3>
@@ -68,7 +94,9 @@ Code="f1b3"
       </article>
     </div>
     <p>
-      <a href="https://github.com/DonnieDice/unraid-kubernetes" target="_blank" rel="noopener"><i class="fa fa-fw fa-github"></i> Documentation and source</a>
+      <a href="https://github.com/DonnieDice/unraid-kubernetes" target="_blank" rel="noopener"><i class="fa fa-fw fa-github"></i> Project homepage</a>
+      &nbsp;&middot;&nbsp;
+      <a href="https://github.com/DonnieDice/unraid-kubernetes#readme" target="_blank" rel="noopener"><i class="fa fa-fw fa-book"></i> README</a>
       &nbsp;&middot;&nbsp;
       <a href="https://github.com/DonnieDice/unraid-kubernetes/discussions" target="_blank" rel="noopener"><i class="fa fa-fw fa-comments"></i> Help and support</a>
     </p>

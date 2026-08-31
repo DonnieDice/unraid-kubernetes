@@ -5,7 +5,7 @@
   <PluginURL>https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg</PluginURL>
   <PluginAuthor>Donnie Dice</PluginAuthor>
   <Project>https://github.com/DonnieDice/unraid-kubernetes</Project>
-  <ReadMe>https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/README.md</ReadMe>
+  <ReadMe>https://github.com/DonnieDice/unraid-kubernetes#readme</ReadMe>
   <Category>Tools:System</Category>
   <Icon>https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/icon.svg</Icon>
   <License>MIT</License>

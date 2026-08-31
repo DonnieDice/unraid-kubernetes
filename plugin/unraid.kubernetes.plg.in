@@ -5,7 +5,7 @@
   name="unraid.kubernetes"
   author="Donnie Dice"
   version="@VERSION@"
-  launch="Kubernetes"
+  launch="Settings/KubernetesSettings"
   icon="kubernetes.png"
   pluginURL="https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg"
   min="7.1.0">
@@ -13,6 +13,16 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Add consistent horizontal gutters to the Kubernetes and Docker runtime sections.
+- Let Docker runtime status and actions wrap naturally before stacking on narrow screens.
+- Keep expanded Dashboard warning content within the tile and add a labeled, timestamped scroll region.
+- Make Dashboard placement configurable across four columns and size the widget from its tile width.
+- Add configurable status polling and direct Docker runtime CPU and memory statistics.
+- Clarify the GitHub project and support discussion links.
+- Open the plugin Settings action directly on Kubernetes Settings and group display controls separately.
+- Place the Kubernetes header tab after Docker in the Unraid task menu.
+
+### 0.1.5
 - Keep Kubernetes tables within their Unraid content area without false horizontal scrollbars.
 - Add direct GitHub Discussions help and support links.
 - Correct project documentation to match the shipped status command paths.
