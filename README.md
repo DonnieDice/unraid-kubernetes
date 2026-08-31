@@ -129,11 +129,10 @@ Existing configuration and data files are never overwritten.
 ## Project
 
 - [Project homepage](https://github.com/DonnieDice/unraid-kubernetes)
-- [Help and support discussions](https://github.com/DonnieDice/unraid-kubernetes/discussions)
+- [Help, support, and bug reports](https://github.com/DonnieDice/unraid-kubernetes/issues)
 
-GitHub Discussions is the project's support forum. Community Applications may
-still report that an Unraid forum support thread is absent because its template
-validator only recognizes `forums.unraid.net` threads.
+GitHub Issues is the project's only support and bug-report channel. Community
+Applications accepts issue trackers as plugin support destinations.
 
 GitLab is the development and CI/CD source of truth. Successful changes flow to
 GitHub as the downstream public mirror used for distribution and releases.
