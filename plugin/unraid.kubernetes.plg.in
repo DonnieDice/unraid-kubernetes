@@ -13,6 +13,10 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Align Dashboard Settings and Open controls with Unraid's expand/collapse control.
+- Align the Settings save action with the native form controls.
+
+### 0.1.9
 - Keep the Dashboard expand/collapse control on the Kubernetes summary line.
 - Align Kubernetes settings with Unraid's native full-width form layout.
 

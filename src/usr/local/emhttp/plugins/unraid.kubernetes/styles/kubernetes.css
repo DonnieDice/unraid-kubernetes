@@ -126,10 +126,11 @@
 
 .dm-k8s-dashboard-native-actions {
   align-items: center;
+  align-self: flex-start;
   display: inline-flex;
   flex: 0 0 auto;
   gap: 3px;
-  line-height: 22px;
+  line-height: 15px;
   margin-left: auto;
   white-space: nowrap;
 }
@@ -469,6 +470,10 @@ table.dm-k8s-runtime-table {
   display: flex;
   gap: 12px;
   padding-left: 0;
+}
+
+.dm-k8s-settings-footer [data-dm-k8s-settings-message]:empty {
+  display: none;
 }
 
 .dm-k8s-settings-docs {
