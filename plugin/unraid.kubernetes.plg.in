@@ -13,6 +13,10 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Keep the Dashboard expand/collapse control on the Kubernetes summary line.
+- Align Kubernetes settings with Unraid's native full-width form layout.
+
+### 0.1.8
 - Inset only the Docker Kubernetes status line while preserving native table alignment.
 
 ### 0.1.7

@@ -11,60 +11,75 @@ Code="f1b3"
   <form data-dm-k8s-settings-form>
     <div class="dm-k8s-settings-section">
       <h3>Cluster</h3>
-      <div class="dm-k8s-settings-grid">
-        <label><span>Provider</span><select name="provider">
+      <dl>
+        <dt>Provider:</dt>
+        <dd><select name="provider">
           <option value="k3d">Local k3d (managed)</option>
           <option value="external">External K3S (read-only)</option>
-        </select></label>
-        <label><span>Cluster name</span><input type="text" name="cluster_name" required></label>
-        <label class="dm-k8s-settings-wide"><span>K3S image</span><input type="text" name="k3s_image" required></label>
-        <label class="dm-k8s-settings-wide"><span>k3d config path</span><input type="text" name="k3d_config" required></label>
-        <label class="dm-k8s-settings-wide"><span>External kubeconfig path</span><input type="text" name="kubeconfig" required></label>
-      </div>
+        </select></dd>
+      </dl>
+      <dl><dt>Cluster name:</dt><dd><input type="text" name="cluster_name" required></dd></dl>
+      <dl><dt>K3S image:</dt><dd><input type="text" name="k3s_image" required></dd></dl>
+      <dl><dt>k3d config path:</dt><dd><input class="dm-k8s-settings-path" type="text" name="k3d_config" required></dd></dl>
+      <dl><dt>External kubeconfig path:</dt><dd><input class="dm-k8s-settings-path" type="text" name="kubeconfig" required></dd></dl>
     </div>
     <div class="dm-k8s-settings-section">
       <h3>Display</h3>
-      <div class="dm-k8s-settings-grid">
-        <label><span>Show resource metrics</span><select name="show_metrics">
+      <dl>
+        <dt>Show resource metrics:</dt>
+        <dd><select name="show_metrics">
           <option value="yes">Yes (recommended)</option>
           <option value="no">No</option>
-        </select></label>
-        <label><span>CPU display unit</span><select name="cpu_display_unit">
+        </select></dd>
+      </dl>
+      <dl>
+        <dt>CPU display unit:</dt>
+        <dd><select name="cpu_display_unit">
           <option value="auto">Automatic</option>
           <option value="percent">% core</option>
           <option value="cores">Cores</option>
-        </select></label>
-        <label><span>Status and metrics refresh</span><select name="refresh_interval">
+        </select></dd>
+      </dl>
+      <dl>
+        <dt>Status and metrics refresh:</dt>
+        <dd><select name="refresh_interval">
           <option value="5">5 seconds (highest load)</option>
           <option value="10">10 seconds</option>
           <option value="15">15 seconds (recommended)</option>
           <option value="30">30 seconds</option>
           <option value="60">60 seconds (lowest load)</option>
-        </select></label>
-      </div>
+        </select></dd>
+      </dl>
     </div>
     <div class="dm-k8s-settings-section">
       <h3>Visibility</h3>
-      <div class="dm-k8s-settings-grid">
-        <label><span>Show Dashboard widget</span><select name="show_dashboard_widget">
+      <dl>
+        <dt>Show Dashboard widget:</dt>
+        <dd><select name="show_dashboard_widget">
           <option value="yes">Yes</option>
           <option value="no">No</option>
-        </select></label>
-        <label><span>Show Kubernetes page</span><select name="show_kubernetes_page">
+        </select></dd>
+      </dl>
+      <dl>
+        <dt>Show Kubernetes page:</dt>
+        <dd><select name="show_kubernetes_page">
           <option value="yes">Yes</option>
           <option value="no">No</option>
-        </select></label>
-        <label><span>Show Docker page Kubernetes panel</span><select name="show_docker_header">
+        </select></dd>
+      </dl>
+      <dl>
+        <dt>Show Docker page Kubernetes panel:</dt>
+        <dd><select name="show_docker_header">
           <option value="yes">Yes</option>
           <option value="no">No</option>
-        </select></label>
-      </div>
+        </select></dd>
+      </dl>
     </div>
     <p class="dm-k8s-settings-help">Saving does not rewrite an existing k3d config, token, or datastore. Restart the local cluster only when a changed setting requires it.</p>
-    <div class="dm-k8s-settings-footer">
-      <span data-dm-k8s-settings-message></span>
-      <button type="submit">Save Settings</button>
-    </div>
+    <dl class="dm-k8s-settings-footer">
+      <dt>&nbsp;</dt>
+      <dd><span data-dm-k8s-settings-message></span><button type="submit">Save Settings</button></dd>
+    </dl>
   </form>
   <div class="dm-k8s-settings-docs">
     <h2>About Unraid Kubernetes</h2>
