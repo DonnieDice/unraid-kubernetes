@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CommunityApplications>
   <Profile>
-    Donnie Dice maintains Unraid Kubernetes, a native Unraid plugin for installing, adopting, managing, and observing a k3d/K3S cluster. Use GitHub Discussions for installation help, usage questions, and support.
+    Donnie Dice maintains Unraid Kubernetes, a native Unraid plugin for installing, adopting, managing, and observing a k3d/K3S cluster. Use the Unraid forum topic for installation help, usage questions, and support.
   </Profile>
   <Icon>https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/icon.svg</Icon>
   <WebPage>https://github.com/DonnieDice/unraid-kubernetes</WebPage>
+  <Forum>https://forums.unraid.net/topic/200438-plugin-unraid-kubernetes-support/</Forum>
 </CommunityApplications>
