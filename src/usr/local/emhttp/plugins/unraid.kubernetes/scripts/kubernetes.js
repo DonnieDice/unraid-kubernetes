@@ -7,10 +7,10 @@
   const endpoint = "/plugins/unraid.kubernetes/include/api.php";
   const settingsEndpoint = "/plugins/unraid.kubernetes/include/settings.php";
   let refreshTimer = null;
+  let refreshInterval = 15000;
   let requestPending = false;
   const observedViews = new WeakSet();
   const runtimeContainerNames = new Set();
-  let dockerStatsObserver = null;
 
   const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -21,6 +21,19 @@
 
   const views = () => Array.from(document.querySelectorAll("[data-dm-k8s-view]"));
   const visibleViews = () => views().filter((view) => view.getClientRects().length > 0);
+  const warningTime = (value) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Unknown time" : date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+  function setRefreshInterval(seconds) {
+    const next = [5, 10, 15, 30, 60].includes(Number(seconds)) ? Number(seconds) * 1000 : 15000;
+    if (refreshTimer && next === refreshInterval) return;
+    refreshInterval = next;
+    if (refreshTimer) window.clearInterval(refreshTimer);
+    refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") refresh();
+    }, refreshInterval);
+  }
   function setMessage(view, text, level) {
     const target = view.querySelector("[data-dm-k8s-message]");
     if (!target) return;
@@ -73,6 +86,7 @@
       ? data.warnings.slice().reverse().map((warning) => `<article>
           <strong>${escapeHtml(warning.reason)}</strong>
           <span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}</span>
+          <time datetime="${escapeHtml(warning.time)}">${escapeHtml(warningTime(warning.time))}</time>
           <p>${escapeHtml(warning.message)}</p>
         </article>`).join("")
       : '<p class="green-text">No recent Kubernetes warning events.</p>';
@@ -96,9 +110,11 @@
     target.innerHTML = data.runtime.map((container) => {
       const running = container.state === "running";
       const role = container.name.endsWith("-serverlb") ? "API load balancer" : "Control plane / worker";
-      const stats = container.id ? `<td class="dm-k8s-advanced" data-dm-k8s-runtime-stats="${escapeHtml(container.id)}">
-        <div class="dm-k8s-runtime-usage"><span data-dm-k8s-cpu>-</span><span data-dm-k8s-memory>-</span></div>
-        <div class="usage-disk mm"><span data-dm-k8s-cpu-bar></span><span></span></div>
+      const cpu = Number.parseFloat(container.cpu);
+      const cpuWidth = Number.isFinite(cpu) ? Math.min(Math.max(cpu, 0), 100) : 0;
+      const stats = container.id ? `<td class="dm-k8s-advanced" title="${escapeHtml(container.memory_usage)}">
+        <div class="dm-k8s-runtime-usage"><span>${escapeHtml(container.cpu)}</span><span>${escapeHtml(container.memory)}</span></div>
+        <div class="usage-disk mm"><span style="width:${cpuWidth}%"></span><span></span></div>
       </td>` : '<td class="dm-k8s-advanced">-</td>';
       return `<tr>
         <td class="ct-name"><i class="fa fa-fw fa-cube ${running ? "green-text" : "red-text"}"></i> <strong>${escapeHtml(container.name)}</strong></td>
@@ -112,7 +128,6 @@
     syncRuntimeAdvancedView(view);
     alignRuntimeColumns(view);
     hideNativeRuntimeRows();
-    syncRuntimeStats();
   }
 
   function syncRuntimeAdvancedView(view) {
@@ -167,18 +182,6 @@
     window.requestAnimationFrame(follow);
   }
 
-  function syncRuntimeStats() {
-    document.querySelectorAll("[data-dm-k8s-runtime-stats]").forEach((target) => {
-      const id = target.dataset.dmK8sRuntimeStats;
-      const cpu = document.querySelector(`#docker_list .cpu-${id}`);
-      const memory = document.querySelector(`#docker_list .mem-${id}`);
-      const bar = document.querySelector(`#docker_list #cpu-${id}`);
-      if (cpu) target.querySelector("[data-dm-k8s-cpu]").textContent = cpu.textContent;
-      if (memory) target.querySelector("[data-dm-k8s-memory]").textContent = memory.textContent;
-      if (bar) target.querySelector("[data-dm-k8s-cpu-bar]").style.width = bar.style.width;
-    });
-  }
-
   function hideNativeRuntimeRows() {
     document.querySelectorAll("#docker_list tr").forEach((row) => {
       const name = row.querySelector(".ct-name .appname")?.textContent.trim();
@@ -222,20 +225,8 @@
     }
   }
 
-  function observeDockerStats() {
-    const list = document.querySelector("#docker_list");
-    if (!list || dockerStatsObserver) return;
-    dockerStatsObserver = new MutationObserver(syncRuntimeStats);
-    dockerStatsObserver.observe(list, {
-      attributes: true,
-      attributeFilter: ["style"],
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
-  }
-
   function render(data) {
+    setRefreshInterval(data.refresh_interval);
     views().forEach((view) => {
       const running = data.cluster.state === "Running";
       const degraded = data.cluster.state === "Degraded";
@@ -251,7 +242,7 @@
         const podsReady = data.pods.filter((pod) => pod.phase === "Running" && pod.ready.split("/")[0] === pod.ready.split("/")[1]).length;
         if (inline) inline.innerHTML = `<span><i class="fa fa-fw fa-server"></i><strong>${nodesReady}/${data.nodes.length}</strong> nodes</span><span><i class="fa fa-fw fa-cube"></i><strong>${podsReady}/${data.pods.length}</strong> pods</span>`;
         if (warnings) warnings.innerHTML = data.warnings.length
-          ? data.warnings.slice().reverse().map((warning) => `<article><strong>${escapeHtml(warning.reason)}</strong><span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}: ${escapeHtml(warning.message)}</span></article>`).join("")
+          ? data.warnings.slice().reverse().map((warning) => `<article><strong>${escapeHtml(warning.reason)}</strong><span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}: ${escapeHtml(warning.message)}</span><time datetime="${escapeHtml(warning.time)}">${escapeHtml(warningTime(warning.time))}</time></article>`).join("")
           : '<span class="green-text"><i class="fa fa-fw fa-check"></i> No recent Kubernetes warning events.</span>';
       }
       if (view.dataset.dmK8sView === "full") renderFull(view, data);
@@ -357,7 +348,6 @@
     });
     positionDockerView();
     positionFullView();
-    observeDockerStats();
     if (added) refresh();
   }
 
@@ -380,13 +370,10 @@
     loadSettings();
     if (window.location.hash === "#dm-k8s-settings") document.querySelector("#dm-k8s-settings")?.setAttribute("open", "");
   }
-  refreshTimer = window.setInterval(() => {
-    if (document.visibilityState === "visible") refresh();
-  }, 15000);
+  setRefreshInterval(15);
   window.addEventListener("beforeunload", () => {
     window.clearInterval(refreshTimer);
     mutationObserver.disconnect();
-    dockerStatsObserver?.disconnect();
     observer.disconnect();
     window.jQuery(document).off("change.dmK8s", ".advancedview", advancedViewChanged);
   }, { once: true });

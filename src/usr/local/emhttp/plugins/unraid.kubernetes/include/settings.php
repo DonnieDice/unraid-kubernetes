@@ -32,6 +32,8 @@ try {
             'show_kubernetes_page' => $config['SHOW_KUBERNETES_PAGE'],
             'show_docker_header' => $config['SHOW_DOCKER_HEADER'],
             'cpu_display_unit' => $config['CPU_DISPLAY_UNIT'],
+            'refresh_interval' => $config['REFRESH_INTERVAL'],
+            'dashboard_column' => $config['DASHBOARD_COLUMN'],
         ], JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -56,6 +58,14 @@ try {
     if (!in_array($cpuDisplayUnit, ['auto', 'percent', 'cores'], true)) {
         throw new InvalidArgumentException('Invalid CPU display unit setting');
     }
+    $refreshInterval = (string)($_POST['refresh_interval'] ?? '');
+    if (!in_array($refreshInterval, ['5', '10', '15', '30', '60'], true)) {
+        throw new InvalidArgumentException('Invalid refresh interval setting');
+    }
+    $dashboardColumn = (string)($_POST['dashboard_column'] ?? '');
+    if (!in_array($dashboardColumn, ['1', '2', '3', '4'], true)) {
+        throw new InvalidArgumentException('Invalid Dashboard column setting');
+    }
     $updates = [
         'PROVIDER' => $provider,
         'CLUSTER_NAME' => dm_k8s_post_setting('cluster_name', '/^[a-z0-9][a-z0-9.-]{0,62}$/'),
@@ -67,6 +77,8 @@ try {
         'SHOW_KUBERNETES_PAGE' => $showKubernetesPage,
         'SHOW_DOCKER_HEADER' => $showDockerHeader,
         'CPU_DISPLAY_UNIT' => $cpuDisplayUnit,
+        'REFRESH_INTERVAL' => $refreshInterval,
+        'DASHBOARD_COLUMN' => $dashboardColumn,
     ];
     $stored = is_readable($settingsPath)
         ? parse_ini_file($settingsPath, false, INI_SCANNER_RAW)
@@ -77,6 +89,8 @@ try {
         'PROVIDER', 'CLUSTER_NAME', 'DATA_ROOT', 'K3D_CONFIG', 'TOKEN_FILE',
         'DATASTORE_DIR', 'STORAGE_DIR', 'KUBECONFIG_DIR', 'K3S_IMAGE', 'KUBECONFIG', 'SHOW_METRICS',
         'SHOW_DASHBOARD_WIDGET', 'SHOW_KUBERNETES_PAGE', 'SHOW_DOCKER_HEADER', 'CPU_DISPLAY_UNIT',
+        'REFRESH_INTERVAL',
+        'DASHBOARD_COLUMN',
     ];
     $lines = [];
     foreach ($order as $key) {

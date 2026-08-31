@@ -19,6 +19,8 @@ $_POST = [
     'show_kubernetes_page' => 'yes',
     'show_docker_header' => 'no',
     'cpu_display_unit' => 'cores',
+    'refresh_interval' => '5',
+    'dashboard_column' => '3',
 ];
 
 ob_start();
@@ -34,6 +36,8 @@ if (($response['ok'] ?? false) !== true
     || ($saved['SHOW_KUBERNETES_PAGE'] ?? '') !== 'yes'
     || ($saved['SHOW_DOCKER_HEADER'] ?? '') !== 'no'
     || ($saved['CPU_DISPLAY_UNIT'] ?? '') !== 'cores'
+    || ($saved['REFRESH_INTERVAL'] ?? '') !== '5'
+    || ($saved['DASHBOARD_COLUMN'] ?? '') !== '3'
     || ($saved['TOKEN_FILE'] ?? '') === '') {
     fwrite(STDERR, 'Settings round-trip failed: response=' . json_encode($response)
         . ', cluster=' . ($saved['CLUSTER_NAME'] ?? 'missing')

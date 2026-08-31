@@ -72,11 +72,15 @@ kubeconfig, and local-path storage for deliberate recovery or deletion.
 - Dedicated **Kubernetes** page with cluster, node, pod, namespace, and warning
   status.
 - Movable Kubernetes dashboard tile using Unraid's native `$mytiles` API.
+- Configurable initial Dashboard placement in columns 1 through 4, with
+  tile-width-aware responsive layout.
 - Compact Kubernetes summary and k3d runtime-container list at the top of the
   Docker page.
 - Guarded start, stop, and restart controls through Unraid's CSRF-protected
   PHP webGUI.
 - Native editable plugin settings without exposing Kubernetes credentials.
+- Configurable 5, 10, 15, 30, or 60-second status and runtime-usage refresh,
+  with a 15-second default.
 
 The plugin renders through Unraid's existing nginx/PHP webGUI. It does not
 install nginx, Apache, or another UI container.
@@ -124,8 +128,8 @@ Existing configuration and data files are never overwritten.
 
 ## Project
 
-- [Source and releases](https://github.com/DonnieDice/unraid-kubernetes)
-- [Help and support](https://github.com/DonnieDice/unraid-kubernetes/discussions)
+- [Project homepage](https://github.com/DonnieDice/unraid-kubernetes)
+- [Help and support discussions](https://github.com/DonnieDice/unraid-kubernetes/discussions)
 
 GitHub Discussions is the project's support forum. Community Applications may
 still report that an Unraid forum support thread is absent because its template
