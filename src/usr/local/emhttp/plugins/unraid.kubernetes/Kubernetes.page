@@ -3,7 +3,7 @@ Title="Kubernetes"
 Tag="fa-cubes"
 Code="f1b3"
 Type="xmenu"
-Cond="exec(\"grep -o '^DOCKER_ENABLED=.yes' /boot/config/docker.cfg 2>/dev/null\")"
+Cond="exec(\"grep -o '^DOCKER_ENABLED=.yes' /boot/config/docker.cfg 2>/dev/null\") && exec(\"grep -q '^SHOW_KUBERNETES_PAGE=.no' /boot/config/plugins/unraid.kubernetes/settings.cfg 2>/dev/null || echo yes\")"
 ---
 <link rel="stylesheet" href="<?autov('/plugins/unraid.kubernetes/styles/kubernetes.css')?>">
 

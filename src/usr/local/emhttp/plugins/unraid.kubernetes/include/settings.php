@@ -28,6 +28,10 @@ try {
             'k3d_config' => $config['K3D_CONFIG'],
             'kubeconfig' => $config['KUBECONFIG'],
             'show_metrics' => $config['SHOW_METRICS'],
+            'show_dashboard_widget' => $config['SHOW_DASHBOARD_WIDGET'],
+            'show_kubernetes_page' => $config['SHOW_KUBERNETES_PAGE'],
+            'show_docker_header' => $config['SHOW_DOCKER_HEADER'],
+            'cpu_display_unit' => $config['CPU_DISPLAY_UNIT'],
         ], JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -40,6 +44,18 @@ try {
     if (!in_array($showMetrics, ['yes', 'no'], true)) {
         throw new InvalidArgumentException('Invalid resource metrics setting');
     }
+    $showDashboardWidget = (string)($_POST['show_dashboard_widget'] ?? '');
+    $showKubernetesPage = (string)($_POST['show_kubernetes_page'] ?? '');
+    $showDockerHeader = (string)($_POST['show_docker_header'] ?? '');
+    foreach ([$showDashboardWidget, $showKubernetesPage, $showDockerHeader] as $visibility) {
+        if (!in_array($visibility, ['yes', 'no'], true)) {
+            throw new InvalidArgumentException('Invalid visibility setting');
+        }
+    }
+    $cpuDisplayUnit = (string)($_POST['cpu_display_unit'] ?? '');
+    if (!in_array($cpuDisplayUnit, ['auto', 'percent', 'cores'], true)) {
+        throw new InvalidArgumentException('Invalid CPU display unit setting');
+    }
     $updates = [
         'PROVIDER' => $provider,
         'CLUSTER_NAME' => dm_k8s_post_setting('cluster_name', '/^[a-z0-9][a-z0-9.-]{0,62}$/'),
@@ -47,6 +63,10 @@ try {
         'K3D_CONFIG' => dm_k8s_post_setting('k3d_config', '/^\/[A-Za-z0-9._ \/-]+$/'),
         'KUBECONFIG' => dm_k8s_post_setting('kubeconfig', '/^\/[A-Za-z0-9._ \/-]+$/'),
         'SHOW_METRICS' => $showMetrics,
+        'SHOW_DASHBOARD_WIDGET' => $showDashboardWidget,
+        'SHOW_KUBERNETES_PAGE' => $showKubernetesPage,
+        'SHOW_DOCKER_HEADER' => $showDockerHeader,
+        'CPU_DISPLAY_UNIT' => $cpuDisplayUnit,
     ];
     $stored = is_readable($settingsPath)
         ? parse_ini_file($settingsPath, false, INI_SCANNER_RAW)
@@ -56,6 +76,7 @@ try {
     $order = [
         'PROVIDER', 'CLUSTER_NAME', 'DATA_ROOT', 'K3D_CONFIG', 'TOKEN_FILE',
         'DATASTORE_DIR', 'STORAGE_DIR', 'KUBECONFIG_DIR', 'K3S_IMAGE', 'KUBECONFIG', 'SHOW_METRICS',
+        'SHOW_DASHBOARD_WIDGET', 'SHOW_KUBERNETES_PAGE', 'SHOW_DOCKER_HEADER', 'CPU_DISPLAY_UNIT',
     ];
     $lines = [];
     foreach ($order as $key) {

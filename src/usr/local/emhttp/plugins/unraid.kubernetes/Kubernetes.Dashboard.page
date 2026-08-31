@@ -1,5 +1,6 @@
 Menu="Dashboard:0"
 Icon="cubes"
+Cond="exec(\"grep -q '^SHOW_DASHBOARD_WIDGET=.no' /boot/config/plugins/unraid.kubernetes/settings.cfg 2>/dev/null || echo yes\")"
 ---
 <?php
 $mytiles['unraid-kubernetes']['column2'] = <<<'HTML'

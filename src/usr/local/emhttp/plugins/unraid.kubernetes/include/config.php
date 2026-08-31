@@ -20,6 +20,10 @@ function dm_k8s_config(): array
         'K3S_IMAGE' => 'rancher/k3s:v1.36.1-k3s1',
         'KUBECONFIG' => '/boot/config/plugins/unraid.kubernetes/external-kubeconfig.yaml',
         'SHOW_METRICS' => 'yes',
+        'SHOW_DASHBOARD_WIDGET' => 'yes',
+        'SHOW_KUBERNETES_PAGE' => 'yes',
+        'SHOW_DOCKER_HEADER' => 'yes',
+        'CPU_DISPLAY_UNIT' => 'auto',
     ];
     $settings = dm_k8s_settings_path();
     $stored = is_readable($settings)
@@ -33,8 +37,13 @@ function dm_k8s_config(): array
     if (!in_array($config['PROVIDER'], ['k3d', 'external'], true)) {
         throw new RuntimeException('Invalid Kubernetes provider in plugin settings');
     }
-    if (!in_array($config['SHOW_METRICS'], ['yes', 'no'], true)) {
-        throw new RuntimeException('Invalid resource metrics setting');
+    foreach (['SHOW_METRICS', 'SHOW_DASHBOARD_WIDGET', 'SHOW_KUBERNETES_PAGE', 'SHOW_DOCKER_HEADER'] as $key) {
+        if (!in_array($config[$key], ['yes', 'no'], true)) {
+            throw new RuntimeException("Invalid {$key} setting");
+        }
+    }
+    if (!in_array($config['CPU_DISPLAY_UNIT'], ['auto', 'percent', 'cores'], true)) {
+        throw new RuntimeException('Invalid CPU display unit setting');
     }
     foreach (['DATA_ROOT', 'K3D_CONFIG', 'KUBECONFIG'] as $key) {
         if (!str_starts_with((string)$config[$key], '/')) {
@@ -102,9 +111,9 @@ function dm_k8s_memory_bytes(string $value): int
     return (int)round(((float)$matches[1]) * $multipliers[$matches[2] ?? '']);
 }
 
-function dm_k8s_format_cpu(int $millicores): string
+function dm_k8s_format_cpu(int $millicores, string $unit = 'auto'): string
 {
-    if ($millicores >= 1000) {
+    if ($unit === 'cores' || ($unit === 'auto' && $millicores >= 1000)) {
         return number_format($millicores / 1000, 2) . ' cores';
     }
     return number_format($millicores / 10, 1) . '% core';
@@ -261,7 +270,7 @@ function dm_k8s_status(): array
             'ready' => $ready,
             'roles' => $roles ?: ['worker'],
             'version' => $node['status']['nodeInfo']['kubeletVersion'] ?? 'unknown',
-            'cpu' => $usage ? dm_k8s_format_usage(dm_k8s_format_cpu($usage['cpu']), $usage['cpu'], $cpuCapacity) : '-',
+            'cpu' => $usage ? dm_k8s_format_usage(dm_k8s_format_cpu($usage['cpu'], $config['CPU_DISPLAY_UNIT']), $usage['cpu'], $cpuCapacity) : '-',
             'memory' => $usage ? dm_k8s_format_usage(dm_k8s_format_memory($usage['memory']), $usage['memory'], $memoryCapacity) : '-',
         ];
     }
@@ -290,7 +299,7 @@ function dm_k8s_status(): array
             'ready' => "{$readyContainers}/{$totalContainers}",
             'phase' => $phase,
             'restarts' => $restarts,
-            'cpu' => $usage ? dm_k8s_format_cpu($usage['cpu']) : '-',
+            'cpu' => $usage ? dm_k8s_format_cpu($usage['cpu'], $config['CPU_DISPLAY_UNIT']) : '-',
             'memory' => $usage ? dm_k8s_format_memory($usage['memory']) : '-',
             'node' => $pod['spec']['nodeName'] ?? '-',
         ];
@@ -301,7 +310,7 @@ function dm_k8s_status(): array
             'name' => $name,
             'pods' => $counts['pods'],
             'ready' => $counts['ready'],
-            'cpu' => dm_k8s_format_cpu($counts['cpu']),
+            'cpu' => dm_k8s_format_cpu($counts['cpu'], $config['CPU_DISPLAY_UNIT']),
             'memory' => dm_k8s_format_memory($counts['memory']),
         ];
     }

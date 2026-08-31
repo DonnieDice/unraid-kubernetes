@@ -4,7 +4,6 @@
   <Overview>Install, adopt, manage, and observe a k3d/K3S cluster through the native Unraid webGUI.</Overview>
   <PluginURL>https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg</PluginURL>
   <PluginAuthor>Donnie Dice</PluginAuthor>
-  <Support>https://github.com/DonnieDice/unraid-kubernetes/discussions</Support>
   <Project>https://github.com/DonnieDice/unraid-kubernetes</Project>
   <ReadMe>https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/README.md</ReadMe>
   <Category>Tools:System</Category>

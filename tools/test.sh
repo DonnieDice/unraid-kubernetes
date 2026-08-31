@@ -16,6 +16,8 @@ exit(
     && dm_k8s_cpu_millicores("125000000n") === 125
     && dm_k8s_memory_bytes("1024Mi") === 1073741824
     && dm_k8s_format_cpu(1250) === "1.25 cores"
+    && dm_k8s_format_cpu(125, "percent") === "12.5% core"
+    && dm_k8s_format_cpu(125, "cores") === "0.13 cores"
     ? 0
     : 1
 );

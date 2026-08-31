@@ -8,12 +8,16 @@
   launch="Kubernetes"
   icon="kubernetes.png"
   pluginURL="https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg"
-  min="7.1.0"
-  support="https://github.com/DonnieDice/unraid-kubernetes/discussions">
+  min="7.1.0">
 
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Add independent visibility controls for the Dashboard widget, Kubernetes page, and Docker page panel.
+- Add Automatic, percent-core, and core CPU display units.
+- Remove the invalid Community Applications forum-support metadata.
+
+### 0.1.3
 - Restore the Kubernetes runtime section above Docker containers with a native page header.
 - Show live runtime CPU and memory usage with Docker Advanced View.
 - Show optional live node, namespace, and pod usage from the Kubernetes Metrics API.

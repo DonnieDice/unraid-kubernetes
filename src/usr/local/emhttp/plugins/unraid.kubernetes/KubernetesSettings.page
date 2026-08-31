@@ -19,6 +19,23 @@ Code="f1b3"
         <option value="yes">Yes (recommended)</option>
         <option value="no">No</option>
       </select></label>
+      <label><span>CPU display unit</span><select name="cpu_display_unit">
+        <option value="auto">Automatic</option>
+        <option value="percent">% core</option>
+        <option value="cores">Cores</option>
+      </select></label>
+      <label><span>Show Dashboard widget</span><select name="show_dashboard_widget">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select></label>
+      <label><span>Show Kubernetes page</span><select name="show_kubernetes_page">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select></label>
+      <label><span>Show Docker page Kubernetes panel</span><select name="show_docker_header">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select></label>
       <label class="dm-k8s-settings-wide"><span>K3S image</span><input type="text" name="k3s_image" required></label>
       <label class="dm-k8s-settings-wide"><span>k3d config path</span><input type="text" name="k3d_config" required></label>
       <label class="dm-k8s-settings-wide"><span>External kubeconfig path</span><input type="text" name="kubeconfig" required></label>
