@@ -4,7 +4,7 @@
 <PLUGIN
   name="unraid.kubernetes"
   author="Donnie Dice"
-  version="0.1.7"
+  version="0.1.8"
   launch="Settings/KubernetesSettings"
   icon="kubernetes.png"
   pluginURL="https://raw.githubusercontent.com/DonnieDice/unraid-kubernetes/main/plugin/unraid.kubernetes.plg"
@@ -12,6 +12,9 @@
 
 <CHANGES>
 <![CDATA[
+### 0.1.8
+- Inset only the Docker Kubernetes status line while preserving native table alignment.
+
 ### 0.1.7
 - Increase Kubernetes page and Docker card edge gutters.
 - Keep Dashboard warning messages wrapped within narrow and custom tile layouts.
@@ -62,18 +65,18 @@
 <SHA256>06d8f25bc3a971c4eb29e0ff08429b180402db0f4dec838c9eac427e296800a0</SHA256>
 </FILE>
 
-<FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.7-noarch-1.txz">
-<URL>https://github.com/DonnieDice/unraid-kubernetes/releases/download/v0.1.7/unraid.kubernetes-0.1.7-noarch-1.txz</URL>
-<SHA256>addd737eb2662cb846530954208fd6dd96b002a6e5ede3ec814eec109104557f</SHA256>
+<FILE Name="/boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.8-noarch-1.txz">
+<URL>https://github.com/DonnieDice/unraid-kubernetes/releases/download/v0.1.8/unraid.kubernetes-0.1.8-noarch-1.txz</URL>
+<SHA256>e761b7c75cb6b2e032397a9496bf86748bc2e3435594da7361936c7f1bd11f2d</SHA256>
 </FILE>
 
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.7-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-0.1.8-noarch-1.txz
 install -m 0755 /boot/config/plugins/unraid.kubernetes/k3d-v5.9.0-linux-amd64 /usr/local/bin/k3d
 /usr/local/emhttp/plugins/unraid.kubernetes/scripts/install.sh
-rm -f $(ls /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-*-noarch-1.txz 2>/dev/null | grep -v '0.1.7')
+rm -f $(ls /boot/config/plugins/unraid.kubernetes/unraid.kubernetes-*-noarch-1.txz 2>/dev/null | grep -v '0.1.8')
 ]]>
 </INLINE>
 </FILE>
