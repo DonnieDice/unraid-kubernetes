@@ -49,6 +49,10 @@ grep -q 'change.dmK8s' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/ku
 grep -q 'icon="kubernetes.png"' plugin/unraid.kubernetes.plg.in
 grep -q 'launch="Settings/KubernetesSettings"' plugin/unraid.kubernetes.plg.in
 grep -qx 'Menu="Tasks:65"' src/usr/local/emhttp/plugins/unraid.kubernetes/Kubernetes.page
+if grep -Rqs 'DASHBOARD_COLUMN' README.md src tests; then
+  echo "Dashboard placement must remain under Unraid's native sortable layout" >&2
+  exit 1
+fi
 test "$(xmllint --xpath 'string(/Plugin/Project)' plugins/unraid-kubernetes.xml)" = 'https://github.com/DonnieDice/unraid-kubernetes'
 test "$(xmllint --xpath 'string(/Plugin/ReadMe)' plugins/unraid-kubernetes.xml)" = 'https://github.com/DonnieDice/unraid-kubernetes#readme'
 test -s src/usr/local/emhttp/plugins/unraid.kubernetes/README.md

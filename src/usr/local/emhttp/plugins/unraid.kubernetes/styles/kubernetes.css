@@ -1,6 +1,6 @@
 .dm-k8s-view {
   --dm-k8s-border: color-mix(in srgb, currentColor 18%, transparent);
-  --dm-k8s-gutter: clamp(12px, 1.5vw, 20px);
+  --dm-k8s-gutter: clamp(24px, 2vw, 32px);
   --dm-k8s-panel: color-mix(in srgb, currentColor 4%, transparent);
 }
 
@@ -199,8 +199,10 @@
   max-height: 132px;
   max-width: 100%;
   min-width: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
+  white-space: normal;
 }
 
 .dm-k8s-dashboard-warnings::-webkit-scrollbar {
@@ -218,11 +220,14 @@
   grid-template-columns: minmax(90px, auto) minmax(0, 1fr) auto;
   max-width: 100%;
   min-width: 0;
+  white-space: normal;
 }
 
+.dm-k8s-dashboard-warnings article strong,
 .dm-k8s-dashboard-warnings article span {
   min-width: 0;
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .dm-k8s-dashboard-warnings time,
@@ -511,8 +516,9 @@ table.dm-k8s-runtime-table {
 
 @container dm-k8s-widget (max-width: 520px) {
   .dm-k8s-dashboard-inline { flex-basis: 100%; max-width: none; order: 3; }
-  .dm-k8s-dashboard-warnings article { grid-template-columns: minmax(90px, auto) minmax(0, 1fr); }
-  .dm-k8s-dashboard-warnings time { grid-column: 1; }
+  .dm-k8s-dashboard-warnings article { grid-template-columns: minmax(0, 1fr) auto; }
+  .dm-k8s-dashboard-warnings article span { grid-column: 1 / -1; grid-row: 2; }
+  .dm-k8s-dashboard-warnings time { grid-column: 2; grid-row: 1; }
 }
 
 @media (max-width: 720px) {

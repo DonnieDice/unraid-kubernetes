@@ -13,6 +13,11 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Increase Kubernetes page and Docker card edge gutters.
+- Keep Dashboard warning messages wrapped within narrow and custom tile layouts.
+- Remove the plugin column setting and defer placement to Unraid's native sortable layout.
+
+### 0.1.6
 - Add consistent horizontal gutters to the Kubernetes and Docker runtime sections.
 - Let Docker runtime status and actions wrap naturally before stacking on narrow screens.
 - Keep expanded Dashboard warning content within the tile and add a labeled, timestamped scroll region.
