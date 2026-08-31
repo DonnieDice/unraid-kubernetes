@@ -15,6 +15,8 @@
 ### @VERSION@
 - Align Dashboard Settings and Open controls with Unraid's expand/collapse control.
 - Align the Settings save action with the native form controls.
+- Remove extra vertical space above the Dashboard summary.
+- Align Docker status and Settings actions with the native section header.
 
 ### 0.1.9
 - Keep the Dashboard expand/collapse control on the Kubernetes summary line.

@@ -145,6 +145,7 @@
   display: inline-flex;
   flex: 0 1 auto;
   gap: 4px;
+  height: 28px;
   line-height: 28px;
   min-width: 0;
   vertical-align: middle;
@@ -362,7 +363,7 @@ div.title.dm-k8s-plugin-title {
   flex-wrap: wrap;
   justify-content: space-between;
   min-height: 34px;
-  padding-inline: var(--dm-k8s-gutter);
+  padding-inline: 10px;
   width: 100%;
 }
 
