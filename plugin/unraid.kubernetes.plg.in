@@ -13,6 +13,11 @@
 <CHANGES>
 <![CDATA[
 ### @VERSION@
+- Keep Kubernetes tables within their Unraid content area without false horizontal scrollbars.
+- Add direct GitHub Discussions help and support links.
+- Correct project documentation to match the shipped status command paths.
+
+### 0.1.4
 - Add independent visibility controls for the Dashboard widget, Kubernetes page, and Docker page panel.
 - Add Automatic, percent-core, and core CPU display units.
 - Remove the invalid Community Applications forum-support metadata.
