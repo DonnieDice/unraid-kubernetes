@@ -9,6 +9,7 @@
   let refreshTimer = null;
   let refreshInterval = 15000;
   let requestPending = false;
+  let jobTab = "failed";
   const observedViews = new WeakSet();
   const runtimeContainerNames = new Set();
 
@@ -56,11 +57,37 @@
     ].map(([label, value]) => `<div class="dm-k8s-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   }
 
+  const warningArticle = (warning) => `<article${warning.state === "recovered" ? ' class="dm-k8s-recovered"' : ""}>
+      <strong>${escapeHtml(warning.reason)}</strong>
+      <span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}${warning.state === "recovered" ? " · recovered" : ""}</span>
+      <time datetime="${escapeHtml(warning.time)}">${escapeHtml(warningTime(warning.time))}</time>
+      <p>${escapeHtml(warning.message)}</p>
+    </article>`;
+  const groupedWarnings = (warnings) => {
+    const ordered = warnings.slice().reverse();
+    const current = ordered.filter((warning) => warning.state !== "recovered");
+    const recovered = ordered.filter((warning) => warning.state === "recovered");
+    return { current, recovered };
+  };
+  const renderWarningGroups = (warnings) =>
+    warnings.length
+      ? (() => {
+        const groups = groupedWarnings(warnings);
+        const currentHtml = groups.current.map(warningArticle).join("");
+        const recoveredHtml = groups.recovered.length
+          ? `<h4 class="dm-k8s-recovered-heading">Recovered</h4>${groups.recovered.map(warningArticle).join("")}`
+          : "";
+        return currentHtml + recoveredHtml;
+      })()
+      : '<p class="green-text">No recent Kubernetes warning events.</p>';
+
   function renderFull(view, data) {
     const nodes = view.querySelector("[data-dm-k8s-nodes]");
     const namespaces = view.querySelector("[data-dm-k8s-namespaces]");
     const pods = view.querySelector("[data-dm-k8s-pods]");
     const warnings = view.querySelector("[data-dm-k8s-warnings]");
+    const jobs = view.querySelector("[data-dm-k8s-jobs]");
+    const jobTabs = view.querySelector("[data-dm-k8s-job-tabs]");
     view.querySelectorAll("[data-dm-k8s-metrics]").forEach((cell) => {
       cell.hidden = !data.metrics_enabled;
     });
@@ -82,14 +109,33 @@
       <td>${pod.restarts}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(pod.cpu)}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(pod.memory)}</td><td>${escapeHtml(pod.node)}</td>
     </tr>`).join("") || '<tr><td colspan="8">No pods reported.</td></tr>';
 
-    if (warnings) warnings.innerHTML = data.warnings.length
-      ? data.warnings.slice().reverse().map((warning) => `<article>
-          <strong>${escapeHtml(warning.reason)}</strong>
-          <span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}</span>
-          <time datetime="${escapeHtml(warning.time)}">${escapeHtml(warningTime(warning.time))}</time>
-          <p>${escapeHtml(warning.message)}</p>
-        </article>`).join("")
-      : '<p class="green-text">No recent Kubernetes warning events.</p>';
+    if (warnings) warnings.innerHTML = renderWarningGroups(data.warnings);
+
+    if (jobTabs || jobs) {
+      const history = Array.isArray(data.jobs) ? data.jobs : [];
+      const failed = history.filter((job) => job.status === "Failed");
+      const completed = history.filter((job) => job.status !== "Failed");
+      if (jobTabs) {
+        jobTabs.innerHTML = `<div class="dm-k8s-tabs" role="tablist" aria-label="Job history">
+          <button type="button" role="tab" data-dm-k8s-job-tab="failed" aria-selected="${jobTab === "failed"}">Failed (${failed.length})</button>
+          <button type="button" role="tab" data-dm-k8s-job-tab="completed" aria-selected="${jobTab === "completed"}">Completed (${completed.length})</button>
+        </div>`;
+        jobTabs.querySelectorAll("[data-dm-k8s-job-tab]").forEach((button) => {
+          button.addEventListener("click", () => {
+            jobTab = button.getAttribute("data-dm-k8s-job-tab");
+            refresh();
+          });
+        });
+      }
+      if (jobs) {
+        const rows = (jobTab === "failed" ? failed : completed).map((job) => `<tr>
+          <td>${escapeHtml(job.namespace)}</td><td>${escapeHtml(job.name)}</td>
+          <td class="${job.status === "Failed" ? "red-text" : "green-text"}">${escapeHtml(job.status)}</td>
+          <td>${escapeHtml(String(job.restarts))}</td><td>${escapeHtml(warningTime(job.time))}</td>
+        </tr>`).join("");
+        jobs.innerHTML = rows || '<tr><td colspan="5">No retained job pods.</td></tr>';
+      }
+    }
   }
 
   function renderRuntime(view, data) {
@@ -242,7 +288,7 @@
         const podsReady = data.pods.filter((pod) => pod.phase === "Running" && pod.ready.split("/")[0] === pod.ready.split("/")[1]).length;
         if (inline) inline.innerHTML = `<span><i class="fa fa-fw fa-server"></i><strong>${nodesReady}/${data.nodes.length}</strong> nodes</span><span><i class="fa fa-fw fa-cube"></i><strong>${podsReady}/${data.pods.length}</strong> pods</span>`;
         if (warnings) warnings.innerHTML = data.warnings.length
-          ? data.warnings.slice().reverse().map((warning) => `<article><strong>${escapeHtml(warning.reason)}</strong><span>${escapeHtml(warning.namespace)}/${escapeHtml(warning.object)}: ${escapeHtml(warning.message)}</span><time datetime="${escapeHtml(warning.time)}">${escapeHtml(warningTime(warning.time))}</time></article>`).join("")
+          ? renderWarningGroups(data.warnings)
           : '<span class="green-text"><i class="fa fa-fw fa-check"></i> No recent Kubernetes warning events.</span>';
       }
       if (view.dataset.dmK8sView === "full") renderFull(view, data);

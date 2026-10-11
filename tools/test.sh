@@ -43,7 +43,11 @@ grep -q 'closest(".status")' src/usr/local/emhttp/plugins/unraid.kubernetes/scri
 grep -q 'container.memory_usage' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function setRefreshInterval' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function syncRuntimeAdvancedView(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
-grep -q 'function alignRuntimeColumns(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
+grep -q "data-dm-k8s-jobs" src/usr/local/emhttp/plugins/unraid.kubernetes/Kubernetes.page
+grep -q "data-dm-k8s-job-tabs" src/usr/local/emhttp/plugins/unraid.kubernetes/Kubernetes.page
+grep -q "'jobs' => \[\]" src/usr/local/emhttp/plugins/unraid.kubernetes/include/config.php
+grep -q 'function dm_k8s_warning_state' src/usr/local/emhttp/plugins/unraid.kubernetes/include/config.php
+grep -q 'renderWarningGroups' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.jsgrep -q 'function alignRuntimeColumns(view)' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'function followRuntimeColumns()' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'change.dmK8s' src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 grep -q 'icon="kubernetes.png"' plugin/unraid.kubernetes.plg.in

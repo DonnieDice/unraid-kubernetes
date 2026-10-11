@@ -151,3 +151,33 @@ test("Settings keeps native dl alignment without horizontal overflow", () => {
     { display: "none" },
   );
 });
+
+test("Health stays active-only with job history tabs and grouped warnings", () => {
+  const page = fs.readFileSync(
+    path.join(pluginRoot, "Kubernetes.page"),
+    "utf8",
+  );
+  const script = fs.readFileSync(
+    path.join(pluginRoot, "scripts/kubernetes.js"),
+    "utf8",
+  );
+  const backend = fs.readFileSync(
+    path.join(pluginRoot, "include/config.php"),
+    "utf8",
+  );
+  assert.match(page, /data-dm-k8s-jobs/);
+  assert.match(page, /data-dm-k8s-job-tabs/);
+  assert.match(script, /jobTab/);
+  assert.match(script, /data-dm-k8s-job-tab/);
+  assert.match(script, /renderWarningGroups/);
+  assert.match(script, /No retained job pods/);
+  assert.match(backend, /'jobs' => \[\]/);
+  assert.match(backend, /dm_k8s_warning_state/);
+  assert.match(css, /\.dm-k8s-tabs/);
+  assert.match(css, /\.dm-k8s-recovered/);
+
+  assertDeclarations(".dm-k8s-dashboard-warnings", {
+    "overflow-y": "auto",
+    "scrollbar-width": "none",
+  });
+});
