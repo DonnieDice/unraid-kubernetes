@@ -311,6 +311,32 @@
   margin: 4px 0;
 }
 
+.dm-k8s-recovered {
+  opacity: 0.6;
+}
+
+.dm-k8s-recovered-heading {
+  font-size: 0.85em;
+  margin: 8px 0 2px;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.dm-k8s-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.dm-k8s-tabs button {
+  cursor: pointer;
+}
+
+.dm-k8s-tabs button[aria-selected="true"] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .dm-k8s-message {
   margin: 8px 0;
 }

@@ -139,6 +139,24 @@ function dm_k8s_format_usage(string $value, int $used, int $capacity): string
     return sprintf('%s (%d%%)', $value, (int)round(($used / $capacity) * 100));
 }
 
+/** Classify a warning event as current or recovered against live object state. */
+function dm_k8s_warning_state(array $event, array $jobState, array $activePodsByKey): string
+{
+    $kind = (string)($event['involvedObject']['kind'] ?? '');
+    $objectNamespace = (string)($event['involvedObject']['namespace'] ?? $event['metadata']['namespace'] ?? 'default');
+    $key = $objectNamespace . '/' . (string)($event['involvedObject']['name'] ?? '');
+    if ($kind === 'Job' && isset($jobState[$key])) {
+        return $jobState[$key];
+    }
+    if ($kind === 'Pod') {
+        if (!array_key_exists($key, $activePodsByKey)) {
+            return 'recovered';
+        }
+        return $activePodsByKey[$key] ? 'recovered' : 'current';
+    }
+    return 'current';
+}
+
 /** @return array<string, mixed> */
 function dm_k8s_status(): array
 {
@@ -167,6 +185,7 @@ function dm_k8s_status(): array
         ],
         'nodes' => [],
         'pods' => [],
+        'jobs' => [],
         'namespaces' => [],
         'warnings' => [],
         'runtime' => [],
@@ -230,13 +249,16 @@ function dm_k8s_status(): array
         }
     }
 
-    $nodesCode = $podsCode = $eventsCode = $nodeMetricsCode = $podMetricsCode = 0;
+    $nodesCode = $podsCode = $eventsCode = $jobsCode = $nodeMetricsCode = $podMetricsCode = 0;
     $nodes = json_decode(dm_k8s_kubectl($config, [
         'get', 'nodes', '-o', 'json',
     ], $nodesCode), true);
     $pods = json_decode(dm_k8s_kubectl($config, [
         'get', 'pods', '--all-namespaces', '-o', 'json',
     ], $podsCode), true);
+    $jobs = json_decode(dm_k8s_kubectl($config, [
+        'get', 'jobs', '--all-namespaces', '-o', 'json',
+    ], $jobsCode), true);
     $events = json_decode(dm_k8s_kubectl($config, [
         'get', 'events', '--all-namespaces',
         '--field-selector', 'type=Warning', '--sort-by=.lastTimestamp', '-o', 'json',
@@ -258,6 +280,14 @@ function dm_k8s_status(): array
     }
     if ($eventsCode !== 0 || !is_array($events)) {
         $events = ['items' => []];
+    }
+    if ($jobsCode !== 0 || !is_array($jobs)) {
+        $jobs = ['items' => []];
+    }
+    $jobState = [];
+    foreach (($jobs['items'] ?? []) as $job) {
+        $jobKey = ($job['metadata']['namespace'] ?? 'default') . '/' . ($job['metadata']['name'] ?? '');
+        $jobState[$jobKey] = !empty($job['status']['succeeded']) ? 'recovered' : 'current';
     }
     if ($nodeMetricsCode !== 0 || !is_array($nodeMetrics)) {
         $nodeMetrics = ['items' => []];
@@ -312,6 +342,7 @@ function dm_k8s_status(): array
     }
 
     $namespaceCounts = [];
+    $activePodsByKey = [];
     foreach (($pods['items'] ?? []) as $pod) {
         $namespace = $pod['metadata']['namespace'] ?? 'default';
         $phase = $pod['status']['phase'] ?? 'Unknown';
@@ -323,6 +354,25 @@ function dm_k8s_status(): array
         }
         $totalContainers = count($pod['spec']['containers'] ?? []);
         $isReady = $totalContainers > 0 && $readyContainers === $totalContainers && $phase === 'Running';
+        $ownerKinds = array_column($pod['metadata']['ownerReferences'] ?? [], 'kind');
+        if (($phase === 'Succeeded' || $phase === 'Failed') && in_array('Job', $ownerKinds, true)) {
+            $finishedAt = '';
+            foreach (($pod['status']['containerStatuses'] ?? []) as $container) {
+                $ended = (string)($container['state']['terminated']['finishedAt'] ?? '');
+                if ($ended !== '' && $ended > $finishedAt) {
+                    $finishedAt = $ended;
+                }
+            }
+            $response['jobs'][] = [
+                'namespace' => $namespace,
+                'name' => $pod['metadata']['name'] ?? 'unknown',
+                'status' => $phase === 'Succeeded' ? 'Completed' : 'Failed',
+                'restarts' => $restarts,
+                'time' => $finishedAt !== '' ? $finishedAt : (string)($pod['metadata']['creationTimestamp'] ?? ''),
+            ];
+            continue;
+        }
+        $activePodsByKey[$namespace . '/' . ($pod['metadata']['name'] ?? '')] = $isReady;
         $usage = $podUsage[$namespace . '/' . ($pod['metadata']['name'] ?? '')] ?? null;
         $namespaceCounts[$namespace] ??= ['pods' => 0, 'ready' => 0, 'cpu' => 0, 'memory' => 0];
         $namespaceCounts[$namespace]['pods']++;
@@ -364,6 +414,7 @@ function dm_k8s_status(): array
             'message' => $event['message'] ?? '',
             'object' => $event['involvedObject']['name'] ?? '',
             'time' => $eventTime,
+            'state' => dm_k8s_warning_state($event, $jobState, $activePodsByKey),
         ];
     }
 
