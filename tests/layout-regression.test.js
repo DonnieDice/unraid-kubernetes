@@ -152,7 +152,7 @@ test("Settings keeps native dl alignment without horizontal overflow", () => {
   );
 });
 
-test("Health stays active-only with job history tabs and grouped warnings", () => {
+test("Health stays active-only with workload history tabs and grouped warnings", () => {
   const page = fs.readFileSync(
     path.join(pluginRoot, "Kubernetes.page"),
     "utf8",
@@ -170,9 +170,11 @@ test("Health stays active-only with job history tabs and grouped warnings", () =
   assert.match(script, /jobTab/);
   assert.match(script, /data-dm-k8s-job-tab/);
   assert.match(script, /renderWarningGroups/);
-  assert.match(script, /No retained job pods/);
+  assert.match(script, /No retained terminal workloads/);
+  assert.match(page, /Workload history/);
   assert.match(backend, /'jobs' => \[\]/);
   assert.match(backend, /dm_k8s_warning_state/);
+  assert.match(backend, /if \(dm_k8s_pod_is_terminal\(\$phase\)\)/);
   assert.match(css, /\.dm-k8s-tabs/);
   assert.match(css, /\.dm-k8s-recovered/);
 
