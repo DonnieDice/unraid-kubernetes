@@ -116,7 +116,7 @@
       const failed = history.filter((job) => job.status === "Failed");
       const completed = history.filter((job) => job.status !== "Failed");
       if (jobTabs) {
-        jobTabs.innerHTML = `<div class="dm-k8s-tabs" role="tablist" aria-label="Job history">
+        jobTabs.innerHTML = `<div class="dm-k8s-tabs" role="tablist" aria-label="Workload history">
           <button type="button" role="tab" data-dm-k8s-job-tab="failed" aria-selected="${jobTab === "failed"}">Failed (${failed.length})</button>
           <button type="button" role="tab" data-dm-k8s-job-tab="completed" aria-selected="${jobTab === "completed"}">Completed (${completed.length})</button>
         </div>`;
@@ -133,7 +133,7 @@
           <td class="${job.status === "Failed" ? "red-text" : "green-text"}">${escapeHtml(job.status)}</td>
           <td>${escapeHtml(String(job.restarts))}</td><td>${escapeHtml(warningTime(job.time))}</td>
         </tr>`).join("");
-        jobs.innerHTML = rows || '<tr><td colspan="5">No retained job pods.</td></tr>';
+        jobs.innerHTML = rows || '<tr><td colspan="5">No retained terminal workloads.</td></tr>';
       }
     }
   }
