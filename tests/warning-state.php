@@ -5,6 +5,11 @@ declare(strict_types=1);
 require __DIR__ . '/../src/usr/local/emhttp/plugins/unraid.kubernetes/include/config.php';
 
 $jobs = ['work/succeeded' => 'recovered', 'work/failed' => 'current'];
+foreach (['Succeeded' => true, 'Failed' => true, 'Running' => false, 'Pending' => false, 'Unknown' => false, '' => false] as $phase => $expected) {
+    if (dm_k8s_pod_is_terminal($phase) !== $expected) {
+        throw new RuntimeException("Unexpected terminal classification for {$phase}");
+    }
+}
 $pods = ['work/ready' => true, 'work/unready' => false, 'other/ready' => false];
 $cases = [
     ['Job', 'succeeded', 'work', 'recovered'],
@@ -28,3 +33,4 @@ foreach ($cases as [$kind, $name, $namespace, $expected]) {
     }
 }
 echo "Warning classification: 16 checks passed\n";
+echo "Terminal workload classification: 6 checks passed\n";

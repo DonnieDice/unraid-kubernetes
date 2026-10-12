@@ -139,6 +139,12 @@ function dm_k8s_format_usage(string $value, int $used, int $capacity): string
     return sprintf('%s (%d%%)', $value, (int)round(($used / $capacity) * 100));
 }
 
+/** Terminal Pods are history regardless of their controller or lack of one. */
+function dm_k8s_pod_is_terminal(string $phase): bool
+{
+    return in_array($phase, ['Succeeded', 'Failed'], true);
+}
+
 /** Classify a warning event as current or recovered against live object state. */
 function dm_k8s_warning_state(array $event, array $jobState, array $activePodsByKey): string
 {
@@ -354,8 +360,7 @@ function dm_k8s_status(): array
         }
         $totalContainers = count($pod['spec']['containers'] ?? []);
         $isReady = $totalContainers > 0 && $readyContainers === $totalContainers && $phase === 'Running';
-        $ownerKinds = array_column($pod['metadata']['ownerReferences'] ?? [], 'kind');
-        if (($phase === 'Succeeded' || $phase === 'Failed') && in_array('Job', $ownerKinds, true)) {
+        if (dm_k8s_pod_is_terminal($phase)) {
             $finishedAt = '';
             foreach (($pod['status']['containerStatuses'] ?? []) as $container) {
                 $ended = (string)($container['state']['terminated']['finishedAt'] ?? '');

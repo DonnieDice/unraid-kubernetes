@@ -52,7 +52,7 @@ Cond="exec(\"grep -o '^DOCKER_ENABLED=.yes' /boot/config/docker.cfg 2>/dev/null\
     </tr></thead><tbody data-dm-k8s-pods></tbody></table>
   </div>
 
-  <h3>Job history</h3>
+  <h3>Workload history</h3>
   <p>Retained completed and failed job pods. Active workloads only appear above.</p>
   <div class="dm-k8s-table-wrap">
     <div data-dm-k8s-job-tabs></div>
