@@ -503,6 +503,79 @@ table.dm-k8s-runtime-table {
   display: none;
 }
 
+.dm-k8s-net-toggle {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dm-k8s-net-toggle:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+}
+
+.dm-k8s-net-warn {
+  color: var(--orange, #f39c12);
+}
+
+.dm-k8s-net-public {
+  color: var(--red, #d9534f);
+  font-weight: 600;
+}
+
+.dm-k8s-net-lan-only {
+  color: var(--orange, #f39c12);
+}
+
+.dm-k8s-net-loopback-only {
+  color: var(--green, #3ca55c);
+}
+
+.dm-k8s-net-stale {
+  opacity: 0.65;
+}
+
+.dm-k8s-net-detail {
+  background: var(--dm-k8s-panel);
+  border-bottom: 1px solid var(--dm-k8s-border);
+  font-size: 0.88em;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+}
+
+.dm-k8s-net-detail p {
+  margin: 4px 0;
+}
+
+.dm-k8s-net-detail code {
+  overflow-wrap: anywhere;
+}
+
+.dm-k8s-net-source {
+  font-size: 0.82em;
+  opacity: 0.65;
+}
+
+.dm-k8s-net-nodeport {
+  font-size: 0.82em;
+  opacity: 0.8;
+}
+
+.dm-k8s-net-warning-badge {
+  color: var(--orange, #f39c12);
+}
+
+.dm-k8s-net-warning-badge + .dm-k8s-net-warning-badge {
+  margin-top: 2px;
+}
+
 .dm-k8s-settings-docs {
   border-top: 1px solid var(--dm-k8s-border);
   margin-top: 28px;
