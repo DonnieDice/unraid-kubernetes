@@ -183,3 +183,82 @@ test("Health stays active-only with workload history tabs and grouped warnings",
     "scrollbar-width": "none",
   });
 });
+
+test("Network column keeps compact class summary with accessible detail", () => {
+  const page = fs.readFileSync(
+    path.join(pluginRoot, "Kubernetes.page"),
+    "utf8",
+  );
+  const script = fs.readFileSync(
+    path.join(pluginRoot, "scripts/kubernetes.js"),
+    "utf8",
+  );
+  const backend = fs.readFileSync(
+    path.join(pluginRoot, "include/config.php"),
+    "utf8",
+  );
+  const networkTest = fs.readFileSync(
+    path.join(root, "tests/network-visibility.php"),
+    "utf8",
+  );
+
+  // The pods table exposes the Network column after Node.
+  const tableHeader = page.match(/<th>Namespace<\/th><th>Name<\/th><th>Ready<\/th><th>Status<\/th><th>Restarts<\/th>.*?<\/tr>/s);
+  assert.ok(tableHeader, "Pods table header must exist");
+  assert.match(tableHeader[0], /<th>Node<\/th><th>Network<\/th>/);
+
+  // Compact cell: one exposure class plus a warning glyph count.
+  assert.match(script, /exposureClassLabel/);
+  assert.match(script, /cluster-internal/);
+  assert.match(script, /loopback-only/);
+  assert.match(script, /dm-k8s-net-warn/);
+
+  // Accessible expandable detail with source naming.
+  assert.match(script, /aria-expanded/);
+  assert.match(script, /aria-controls/);
+  assert.match(script, /dm-k8s-net-source/);
+  assert.match(script, /renderNetworkDetail/);
+
+  // Provider-unavailable degradation is explicit, not an empty list.
+  assert.match(script, /provider-unavailable/);
+  assert.match(script, /provider unavailable/);
+  assert.match(backend, /provider-unavailable/);
+
+  // Credential-bearing material never enters responses.
+  for (const forbidden of [
+    /get\s+secrets/i,
+    /kubectl.*(secret|token)/i,
+    /\$_ENV/,
+    /getenv\('KUBECONFIG'\)/,
+  ]) {
+    assert.doesNotMatch(backend, forbidden);
+    assert.doesNotMatch(script, forbidden);
+  }
+  assert.doesNotMatch(backend, /annotations/);
+
+  // All five contract fixture cases are exercised.
+  for (const fixtureCase of [
+    "ClusterIP",
+    "NodePort",
+    "Ingress",
+    "hostNetwork",
+    "no-endpoint",
+  ]) {
+    assert.match(networkTest, new RegExp(fixtureCase, "i"), `fixture case ${fixtureCase} missing`);
+  }
+  assert.match(networkTest, /selector-mismatch/);
+  assert.match(networkTest, /wildcard-binding/);
+  assert.match(networkTest, /duplicate-host-ports/);
+
+  // Classifier lives in the backend with the four ordered classes.
+  assert.match(backend, /function dm_k8s_classify_exposure/);
+  assert.match(backend, /'public', 'lan-only', 'loopback-only'/);
+
+  // Detail styling keeps narrow-viewport safety.
+  assert.match(css, /\.dm-k8s-net-detail/);
+  assertDeclarations(".dm-k8s-net-detail", {
+    "max-width": "100%",
+    "min-width": "0",
+    "overflow-wrap": "anywhere",
+  });
+});

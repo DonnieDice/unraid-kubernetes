@@ -69,6 +69,85 @@
     const recovered = ordered.filter((warning) => warning.state === "recovered");
     return { current, recovered };
   };
+
+  const exposureClassLabel = {
+    public: "Public",
+    "lan-only": "LAN-only",
+    "loopback-only": "Loopback-only",
+    "cluster-internal": "Cluster-internal",
+  };
+
+  const renderNetworkValue = (network) => {
+    const label = exposureClassLabel[network.class] ?? "Unknown";
+    const warnings = network.warnings ?? [];
+    const glyph = warnings.length
+      ? ` <span class="dm-k8s-net-warn" role="img" aria-label="${warnings.length} network warnings">&#9888; ${warnings.length}</span>`
+      : "";
+    return `${escapeHtml(label)}${glyph}`;
+  };
+
+  const renderNetworkCell = (network) => {
+    if (!network) return '<td>-</td>';
+    if (network.state === "provider-unavailable") {
+      return '<td><span class="dm-k8s-net-stale" title="k3d publication source unavailable">provider unavailable</span></td>';
+    }
+    return `<td class="dm-k8s-net-${escapeHtml(network.class)}">${renderNetworkValue(network)}</td>`;
+  };
+
+  const renderNetworkDetail = (network) => {
+    if (!network) return "";
+    if (network.state === "provider-unavailable") {
+      return '<p class="dm-k8s-net-detail-stale">k3d publication source unavailable; exposure classes were not computed.</p>';
+    }
+    const lines = [];
+    lines.push(`<p><strong>Pod IP</strong> <code>${escapeHtml(network.pod_ip || "-")}</code>` +
+      (network.cni ? ` <span class="dm-k8s-net-source">(${escapeHtml(network.cni)})</span>` : "") + `</p>`);
+    if (network.host_network) {
+      const hostPorts = (network.host_ports ?? [])
+        .map((port) => `${escapeHtml(String(port.host_ip || "0.0.0.0"))}:${escapeHtml(String(port.host_port))}&rarr;${escapeHtml(String(port.container_port))}/${escapeHtml(port.protocol)}`)
+        .join(", ");
+      lines.push(`<p><strong>hostNetwork</strong> <span class="dm-k8s-net-source">Pod</span> <code>${escapeHtml(network.host_ip || "-")}</code>${hostPorts ? ` ports ${hostPorts}` : ""}</p>`);
+    }
+    for (const service of network.services ?? []) {
+      const ports = (service.ports ?? [])
+        .map((port) => `${escapeHtml(String(port.port))}&rarr;${escapeHtml(String(port.target_port))}/${escapeHtml(port.protocol)}` +
+          (port.node_port ? ` <span class="dm-k8s-net-nodeport">nodePort ${escapeHtml(String(port.node_port))}</span>` : ""))
+        .join(", ");
+      const endpoints = service.ready_count > 0
+        ? `${service.ready_count} ready (${(service.ready_endpoints ?? []).map((address) => escapeHtml(address)).join(", ")})`
+        : service.not_ready_count > 0
+          ? "no ready endpoints"
+          : "No ready endpoints";
+      lines.push(`<p><strong>Service</strong> <code>${escapeHtml(service.name)}</code> <span class="dm-k8s-net-source">${escapeHtml(service.source)}</span>` +
+        ` &middot; ${escapeHtml(service.type)}${ports ? ` &middot; ${ports}` : ""}` +
+        ` &middot; <span class="dm-k8s-net-source">EndpointSlice</span> ${endpoints}</p>`);
+      for (const route of service.ingress_routes ?? []) {
+        lines.push(`<p><strong>Ingress</strong> <code>${escapeHtml(route.host)}${escapeHtml(route.path)}</code>` +
+          ` <span class="dm-k8s-net-source">Ingress${route.class ? `/${escapeHtml(route.class)}` : ""}</span>` +
+          `${service.external_path ? " &middot; served through Cloudflare tunnel (public path)" : ""}</p>`);
+      }
+      const publications = service.publications ?? [];
+      const unpublished = service.unpublished_node_ports ?? [];
+      if (publications.length) {
+        const binds = publications
+          .map((publication) => `${escapeHtml(publication.host_ip || "0.0.0.0")}:${escapeHtml(publication.host_port)}&rarr;${escapeHtml(publication.node_port)} <span class="dm-k8s-net-source">k3d</span>`)
+          .join(", ");
+        lines.push(`<p><strong>Host publications</strong> ${binds}</p>`);
+      }
+      for (const nodePort of unpublished) {
+        lines.push(`<p><strong>NodePort</strong> ${escapeHtml(nodePort)} <span class="dm-k8s-net-source">Service</span> &middot; no host publication (cluster-internal)</p>`);
+      }
+    }
+    if (!(network.services ?? []).length) {
+      lines.push('<p><span class="dm-k8s-net-source">Service</span> No selector-matching Services.</p>');
+    }
+    for (const warning of network.warnings ?? []) {
+      lines.push(`<p class="dm-k8s-net-warning-badge">&#9888; <strong>${escapeHtml(warning.rule)}</strong>` +
+        ` <span class="dm-k8s-net-source">${escapeHtml(warning.source)}</span> &middot; ${escapeHtml(warning.message)}</p>`);
+    }
+    return lines.join("");
+  };
+
   const renderWarningGroups = (warnings) =>
     warnings.length
       ? (() => {
@@ -103,11 +182,37 @@
       <td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(namespace.cpu)}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(namespace.memory)}</td>
     </tr>`).join("") || '<tr><td colspan="5">No namespaces reported.</td></tr>';
 
-    if (pods) pods.innerHTML = data.pods.map((pod) => `<tr>
-      <td>${escapeHtml(pod.namespace)}</td><td>${escapeHtml(pod.name)}</td><td>${escapeHtml(pod.ready)}</td>
-      <td class="${pod.phase === "Running" ? "green-text" : "red-text"}">${escapeHtml(pod.phase)}</td>
-      <td>${pod.restarts}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(pod.cpu)}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(pod.memory)}</td><td>${escapeHtml(pod.node)}</td>
-    </tr>`).join("") || '<tr><td colspan="8">No pods reported.</td></tr>';
+    if (pods) {
+      const rows = [];
+      data.pods.forEach((pod, index) => {
+        const network = pod.network ?? null;
+        const detailId = `dm-k8s-net-${index}`;
+        const hasDetail = network && network.state !== "provider-unavailable";
+        rows.push(`<tr data-dm-k8s-pod-index="${index}">`);
+        rows.push(`<td>${escapeHtml(pod.namespace)}</td><td>${escapeHtml(pod.name)}</td><td>${escapeHtml(pod.ready)}</td>`);
+        rows.push(`<td class="${pod.phase === "Running" ? "green-text" : "red-text"}">${escapeHtml(pod.phase)}</td>`);
+        rows.push(`<td>${pod.restarts}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(pod.cpu)}</td><td data-dm-k8s-metrics ${data.metrics_enabled ? "" : "hidden"}>${escapeHtml(pod.memory)}</td><td>${escapeHtml(pod.node)}</td>`);
+        rows.push(hasDetail
+          ? `<td class="dm-k8s-net-cell"><button type="button" class="dm-k8s-net-toggle" aria-expanded="false" aria-controls="${detailId}" data-dm-k8s-net-toggle="${index}" title="Show network detail">${renderNetworkValue(network)}</button></td>`
+          : renderNetworkCell(network));
+        rows.push("</tr>");
+        if (hasDetail) {
+          rows.push(`<tr class="dm-k8s-net-detail-row" id="${detailId}" hidden>`);
+          rows.push('<td colspan="9" class="dm-k8s-net-detail">');
+          rows.push(renderNetworkDetail(network));
+          rows.push("</td></tr>");
+        }
+      });
+      pods.innerHTML = rows.join("") || '<tr><td colspan="9">No pods reported.</td></tr>';
+      pods.querySelectorAll("[data-dm-k8s-net-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const detail = document.getElementById(button.getAttribute("aria-controls"));
+          const expanded = button.getAttribute("aria-expanded") === "true";
+          button.setAttribute("aria-expanded", expanded ? "false" : "true");
+          if (detail) detail.hidden = expanded;
+        });
+      });
+    }
 
     if (warnings) warnings.innerHTML = renderWarningGroups(data.warnings);
 
