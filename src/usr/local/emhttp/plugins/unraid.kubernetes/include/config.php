@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 const DM_K8S_RC = '/etc/rc.d/rc.unraid-kubernetes';
 
+require_once __DIR__ . '/resources.php';
+
 function dm_k8s_settings_path(): string
 {
     return getenv('UNRAID_K8S_SETTINGS') ?: '/boot/config/plugins/unraid.kubernetes/settings.cfg';
@@ -25,6 +27,10 @@ function dm_k8s_config(): array
         'SHOW_DOCKER_HEADER' => 'yes',
         'CPU_DISPLAY_UNIT' => 'auto',
         'REFRESH_INTERVAL' => '15',
+        'CPU_LIMIT_CORES' => '0',
+        'MEMORY_LIMIT_MIB' => '0',
+        'HOST_RESERVE_CPUS' => '1',
+        'HOST_RESERVE_MEMORY_MIB' => '512',
     ];
     $settings = dm_k8s_settings_path();
     $stored = is_readable($settings)
@@ -51,6 +57,11 @@ function dm_k8s_config(): array
     }
     foreach (['DATA_ROOT', 'K3D_CONFIG', 'KUBECONFIG'] as $key) {
         if (!str_starts_with((string)$config[$key], '/')) {
+            throw new RuntimeException("Invalid {$key} in plugin settings");
+        }
+    }
+    foreach (['CPU_LIMIT_CORES', 'MEMORY_LIMIT_MIB', 'HOST_RESERVE_CPUS', 'HOST_RESERVE_MEMORY_MIB'] as $key) {
+        if (!preg_match('/^\d{1,9}$/', (string)$config[$key])) {
             throw new RuntimeException("Invalid {$key} in plugin settings");
         }
     }
@@ -716,6 +727,7 @@ function dm_k8s_status(): array
     ];
 
     if ($running !== 'true') {
+        $response['resources'] = dm_k8s_resource_envelope($config, ['items' => []], ['items' => []]);
         return $response;
     }
 
@@ -809,6 +821,7 @@ function dm_k8s_status(): array
     if ($nodesCode !== 0 || $podsCode !== 0 || !is_array($nodes) || !is_array($pods)) {
         $response['cluster']['state'] = 'Degraded';
         $response['error'] = 'The Kubernetes API did not return node and pod status.';
+        $response['resources'] = dm_k8s_resource_envelope($config, ['items' => []], ['items' => []]);
         return $response;
     }
     if ($eventsCode !== 0 || !is_array($events)) {
@@ -1042,5 +1055,167 @@ function dm_k8s_status(): array
         ];
     }
 
+    $response['resources'] = dm_k8s_resource_envelope(
+        $config,
+        is_array($nodes) ? $nodes : ['items' => []],
+        is_array($pods) ? $pods : ['items' => []],
+        dm_k8s_cpu_manager_policy($config)
+    );
+
     return $response;
+}
+
+/**
+ * Verify the kubelet CPU Manager policy from the kube-system/kubelet-config
+ * ConfigMap. Returns 'static' only when verifiably configured; anything
+ * unreadable stays 'none' so exclusive-CPU UI never shows unverified.
+ */
+function dm_k8s_cpu_manager_policy(array $config): string
+{
+    $code = 0;
+    $raw = dm_k8s_kubectl($config, [
+        'get', 'configmap', 'kubelet-config', '-n', 'kube-system', '-o', 'json',
+    ], $code);
+    if ($code !== 0) {
+        return 'none';
+    }
+    $configMap = json_decode($raw, true);
+    $kubelet = (string)($configMap['data']['kubelet'] ?? $configMap['data']['config.yaml'] ?? '');
+    if ($kubelet === '') {
+        return 'none';
+    }
+    return preg_match('/(?m)^\s*cpuManagerPolicy:\s*static\s*$/m', $kubelet) ? 'static' : 'none';
+}
+
+/**
+ * Build the full resource envelope section of the status payload: host reads,
+ * the applied k3d container envelope, Kubernetes capacity/allocatable, and
+ * the per-Pod allocation rollup with QoS and exclusive-CPU eligibility.
+ *
+ * @param array<string, string> $config
+ * @param array $nodes NodeList from kubectl or an empty array.
+ * @param array $pods PodList from kubectl or an empty array.
+ * @param string $cpuManagerPolicy Verified kubelet CPU Manager policy.
+ * @return array<string, mixed>
+ */
+function dm_k8s_resource_envelope(array $config, array $nodes, array $pods, string $cpuManagerPolicy = 'none'): array
+{
+    $provider = (string)($config['PROVIDER'] ?? 'k3d');
+    $cluster = (string)($config['CLUSTER_NAME'] ?? '');
+    $host = dm_k8s_host_envelope();
+    $k3d = $provider === 'k3d'
+        ? dm_k8s_k3d_envelope($cluster)
+        : ['available' => false, 'cpuset_cpus' => '', 'cpu_limit_cores' => 0, 'cpu_shares' => 0, 'memory_limit_bytes' => 0, 'source' => 'external (read-only)'];
+
+    $capacity = ['cpu_millicores' => 0, 'memory_bytes' => 0];
+    $allocatable = ['cpu_millicores' => 0, 'memory_bytes' => 0];
+    foreach (($nodes['items'] ?? []) as $node) {
+        $capacity['cpu_millicores'] += dm_k8s_quantity_millicores((string)($node['status']['capacity']['cpu'] ?? ''));
+        $capacity['memory_bytes'] += dm_k8s_quantity_bytes((string)($node['status']['capacity']['memory'] ?? ''));
+        $allocatable['cpu_millicores'] += dm_k8s_quantity_millicores((string)($node['status']['allocatable']['cpu'] ?? ''));
+        $allocatable['memory_bytes'] += dm_k8s_quantity_bytes((string)($node['status']['allocatable']['memory'] ?? ''));
+    }
+
+    $rollup = [
+        'pods' => 0,
+        'cpu_requests_millicores' => 0,
+        'cpu_limits_millicores' => 0,
+        'memory_requests_bytes' => 0,
+        'memory_limits_bytes' => 0,
+        'guaranteed_pods' => 0,
+        'exclusive_eligible_pods' => 0,
+        'host_reserve_cpus' => max(0, (int)($config['HOST_RESERVE_CPUS'] ?? 1)),
+        'host_reserve_memory_bytes' => max(0, (int)($config['HOST_RESERVE_MEMORY_MIB'] ?? 0)) * 1048576,
+    ];
+    $podAllocations = [];
+    // Assigned exclusive CPUs come from the kubelet's cpu_manager_state when
+    // the static policy is verifiably active. k3d runs kubelet inside the
+    // server container, so read it there through the fixed-path wrapper;
+    // external clusters read the host file directly. Unreadable state leaves
+    // the list empty so the UI never guesses a pinning.
+    $cpuAssignments = [];
+    if ($cpuManagerPolicy === 'static') {
+        $rawState = '';
+        if ($provider === 'k3d' && $cluster !== '') {
+            $stateCode = 0;
+            $rawState = dm_k8s_run([
+                '/usr/bin/docker', 'exec', "k3d-{$cluster}-server-0",
+                '/bin/cat', '/var/lib/kubelet/cpu_manager_state',
+            ], $stateCode);
+        } elseif (is_readable('/var/lib/kubelet/cpu_manager_state')) {
+            $rawState = (string)@file_get_contents('/var/lib/kubelet/cpu_manager_state');
+        }
+        $state = is_string($rawState) && $rawState !== '' ? json_decode($rawState, true) : null;
+        if (is_array($state) && is_array($state['entries'] ?? null)) {
+            $cpuAssignments = $state['entries'];
+        }
+    }
+    foreach (($pods['items'] ?? []) as $pod) {
+        $phase = (string)($pod['status']['phase'] ?? 'Unknown');
+        if (dm_k8s_pod_is_terminal($phase)) {
+            continue;
+        }
+        $rollup['pods']++;
+        $cpuRequests = 0;
+        $cpuLimits = 0;
+        $memoryRequests = 0;
+        $memoryLimits = 0;
+        foreach (($pod['spec']['containers'] ?? []) as $container) {
+            $cpuRequests += dm_k8s_quantity_millicores((string)($container['resources']['requests']['cpu'] ?? ''));
+            $cpuLimits += dm_k8s_quantity_millicores((string)($container['resources']['limits']['cpu'] ?? ''));
+            $memoryRequests += dm_k8s_quantity_bytes((string)($container['resources']['requests']['memory'] ?? ''));
+            $memoryLimits += dm_k8s_quantity_bytes((string)($container['resources']['limits']['memory'] ?? ''));
+        }
+        $rollup['cpu_requests_millicores'] += $cpuRequests;
+        $rollup['cpu_limits_millicores'] += $cpuLimits;
+        $rollup['memory_requests_bytes'] += $memoryRequests;
+        $rollup['memory_limits_bytes'] += $memoryLimits;
+        $qos = dm_k8s_pod_qos($pod);
+        if ($qos === 'Guaranteed') {
+            $rollup['guaranteed_pods']++;
+        }
+        $exclusive = dm_k8s_pod_exclusive_eligible($pod, $cpuManagerPolicy);
+        if ($exclusive) {
+            $rollup['exclusive_eligible_pods']++;
+        }
+        // Assigned exclusive CPUs come from the kubelet cpu_manager_state
+        // assignments captured above; the list stays empty when the state
+        // file is unreadable so the UI never guesses a pinning.
+        $assigned = [];
+        if ($exclusive) {
+            $podRef = ($pod['metadata']['namespace'] ?? 'default') . '_' . ($pod['metadata']['name'] ?? '');
+            foreach ($cpuAssignments as $containerKey => $cpuList) {
+                if (is_string($containerKey) && str_starts_with($containerKey, $podRef . '/')) {
+                    $assigned[] = (string)$cpuList;
+                }
+            }
+        }
+        $podAllocations[] = [
+            'namespace' => (string)($pod['metadata']['namespace'] ?? 'default'),
+            'name' => (string)($pod['metadata']['name'] ?? ''),
+            'qos' => $qos,
+            'cpu_requests_millicores' => $cpuRequests,
+            'cpu_limits_millicores' => $cpuLimits,
+            'memory_requests_bytes' => $memoryRequests,
+            'memory_limits_bytes' => $memoryLimits,
+            'exclusive_eligible' => $exclusive,
+            'assigned_cpus' => $assigned,
+            'priority' => (int)($pod['spec']['priority'] ?? 0),
+            'priority_class' => (string)($pod['spec']['priorityClassName'] ?? ''),
+        ];
+    }
+
+    return [
+        'provider' => $provider,
+        'host' => $host,
+        'k3d' => $k3d,
+        'cpu_manager_policy' => $cpuManagerPolicy,
+        'exclusive_cpu_available' => $cpuManagerPolicy === 'static',
+        'capacity' => $capacity,
+        'allocatable' => $allocatable,
+        'workloads' => $rollup,
+        'pods' => $podAllocations,
+        'managed' => $provider === 'k3d',
+        'readonly' => $provider !== 'k3d',
+    ];
 }

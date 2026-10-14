@@ -262,3 +262,66 @@ test("Network column keeps compact class summary with accessible detail", () => 
     "overflow-wrap": "anywhere",
   });
 });
+
+test("Resource envelope keeps layers separate with guarded exclusive CPU column", () => {
+  const page = fs.readFileSync(
+    path.join(pluginRoot, "Kubernetes.page"),
+    "utf8",
+  );
+  const script = fs.readFileSync(
+    path.join(pluginRoot, "scripts/kubernetes.js"),
+    "utf8",
+  );
+  const settings = fs.readFileSync(
+    path.join(pluginRoot, "KubernetesSettings.page"),
+    "utf8",
+  );
+  const backend = fs.readFileSync(
+    path.join(pluginRoot, "include/config.php"),
+    "utf8",
+  );
+  const resources = fs.readFileSync(
+    path.join(pluginRoot, "include/resources.php"),
+    "utf8",
+  );
+
+  // The envelope tables exist after Pods, before workload history.
+  const pods = page.indexOf("<h3>Pods</h3>");
+  const envelope = page.indexOf("<h3>Resource envelope</h3>");
+  const history = page.indexOf("<h3>Workload history</h3>");
+  assert.ok(pods !== -1 && envelope !== -1 && history !== -1);
+  assert.ok(pods < envelope && envelope < history, "Envelope tables must sit between Pods and workload history");
+
+  assert.match(page, /data-dm-k8s-resources/);
+  assert.match(page, /data-dm-k8s-allocations/);
+  assert.match(script, /renderResources/);
+  assert.match(script, /renderAllocations/);
+
+  // The UI names Docker cpuset allocation and Kubernetes pinning separately.
+  assert.match(page, /Docker-level/);
+  assert.match(page, /Exclusive CPU rows appear only when the CPU Manager static policy is active/);
+  assert.match(script, /exclusive_cpu_available/);
+
+  // Exclusive CPUs render only under verifiable static policy.
+  assert.match(backend, /'exclusive_cpu_available'/);
+  assert.match(resources, /function dm_k8s_pod_exclusive_eligible/);
+  assert.match(resources, /cpuManagerPolicy !== 'static'/);
+  assert.match(resources, /'Guaranteed'/);
+
+  // Settings keep preview + guarded apply for the envelope.
+  assert.match(settings, /Resource envelope \(k3d\)/);
+  assert.match(settings, /data-dm-k8s-preview/);
+  assert.match(settings, /name="cpu_limit_cores"/);
+  assert.match(settings, /name="memory_limit_mib"/);
+  assert.match(settings, /name="host_reserve_cpus"/);
+  assert.match(settings, /name="host_reserve_memory_mib"/);
+  assert.match(script, /watchResourcePreview/);
+  assert.match(script, /dm-k8s-preview-violations/);
+  assert.match(script, /external clusters stay read-only/);
+
+  // Adopted configs are never rewritten; rollback is a restart away.
+  assert.match(resources, /never/i);
+
+  // Unreachable-cluster degradation is explicit, not a crash.
+  assert.match(script, /Resource envelope unavailable/);
+});
