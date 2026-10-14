@@ -160,6 +160,60 @@
       })()
       : '<p class="green-text">No recent Kubernetes warning events.</p>';
 
+  const renderResources = (view, data) => {
+    const target = view.querySelector("[data-dm-k8s-resources]");
+    if (!target) return;
+    const resources = data.resources;
+    if (!resources) {
+      target.innerHTML = '<tr><td colspan="4">Resource envelope unavailable.</td></tr>';
+      return;
+    }
+    const host = resources.host ?? {};
+    const k3d = resources.k3d ?? {};
+    const capacity = resources.capacity ?? {};
+    const allocatable = resources.allocatable ?? {};
+    const workloads = resources.workloads ?? {};
+    const formatCpu = (millicores) => millicores > 0 ? `${(millicores / 1000).toFixed(2)} cores` : "-";
+    const formatMemory = (bytes) => bytes > 0 ? `${(bytes / 1024 ** 3).toFixed(1)} GiB` : "-";
+    const hostCpu = `${host.logical_cpus ?? "-"} logical${host.sockets ? ` / ${host.sockets} socket(s)` : ""}`;
+    const rows = [
+      ["Host", hostCpu, formatMemory(host.memory_bytes ?? 0), host.source ?? "host"],
+      ["Host reserve", `${workloads.host_reserve_cpus ?? "-"} CPU(s) reserved`, formatMemory(workloads.host_reserve_memory_bytes ?? 0), "settings"],
+      ["k3d container", resources.readonly ? "read-only (external)" : k3d.cpu_limit_cores > 0 ? `${k3d.cpu_limit_cores} core(s)${k3d.cpuset_cpus ? ` · cpuset ${k3d.cpuset_cpus}` : ""}` : "unbounded", resources.readonly ? "-" : k3d.memory_limit_bytes > 0 ? formatMemory(k3d.memory_limit_bytes) : "unbounded", resources.readonly ? "external provider" : k3d.source ?? "docker"],
+      ["Kubernetes capacity", formatCpu(capacity.cpu_millicores ?? 0), formatMemory(capacity.memory_bytes ?? 0), "kubectl nodes"],
+      ["Kubernetes allocatable", formatCpu(allocatable.cpu_millicores ?? 0), formatMemory(allocatable.memory_bytes ?? 0), "kubectl nodes"],
+      ["Workload requests", formatCpu(workloads.cpu_requests_millicores ?? 0), formatMemory(workloads.memory_requests_bytes ?? 0), "kubectl pods"],
+      ["Workload limits", formatCpu(workloads.cpu_limits_millicores ?? 0), formatMemory(workloads.memory_limits_bytes ?? 0), "kubectl pods"],
+    ];
+    target.innerHTML = rows.map(([layer, cpu, memory, source]) => `<tr>
+      <td>${escapeHtml(layer)}</td><td>${escapeHtml(cpu)}</td><td>${escapeHtml(memory)}</td><td>${escapeHtml(source)}</td>
+    </tr>`).join("");
+  };
+
+  const renderAllocations = (view, data) => {
+    const target = view.querySelector("[data-dm-k8s-allocations]");
+    if (!target) return;
+    const resources = data.resources;
+    const allocations = (resources?.pods ?? []);
+    if (!resources) {
+      target.innerHTML = '<tr><td colspan="7">Workload allocation unavailable.</td></tr>';
+      return;
+    }
+    if (!allocations.length) {
+      target.innerHTML = '<tr><td colspan="7">No active workloads report resource requests.</td></tr>';
+      return;
+    }
+    const formatCpu = (millicores) => millicores > 0 ? `${(millicores / 1000).toFixed(2)}` : "0";
+    const formatMemory = (bytes) => bytes > 0 ? `${(bytes / 1024 ** 3).toFixed(2)} GiB` : "0";
+    target.innerHTML = allocations.map((pod) => `<tr>
+      <td>${escapeHtml(pod.namespace)}</td><td>${escapeHtml(pod.name)}</td><td>${escapeHtml(pod.qos)}</td>
+      <td>${formatCpu(pod.cpu_requests_millicores)} / ${formatCpu(pod.cpu_limits_millicores)} cores</td>
+      <td>${formatMemory(pod.memory_requests_bytes)} / ${formatMemory(pod.memory_limits_bytes)}</td>
+      <td>${escapeHtml(pod.priority_class || String(pod.priority || 0))}</td>
+      <td>${pod.exclusive_eligible && resources.exclusive_cpu_available ? escapeHtml((pod.assigned_cpus ?? []).join(", ") || "eligible") : "-"}</td>
+    </tr>`).join("");
+  };
+
   function renderFull(view, data) {
     const nodes = view.querySelector("[data-dm-k8s-nodes]");
     const namespaces = view.querySelector("[data-dm-k8s-namespaces]");
@@ -396,7 +450,11 @@
           ? renderWarningGroups(data.warnings)
           : '<span class="green-text"><i class="fa fa-fw fa-check"></i> No recent Kubernetes warning events.</span>';
       }
-      if (view.dataset.dmK8sView === "full") renderFull(view, data);
+      if (view.dataset.dmK8sView === "full") {
+        renderFull(view, data);
+        renderResources(view, data);
+        renderAllocations(view, data);
+      }
       if (view.dataset.dmK8sView === "docker") renderRuntime(view, data);
       view.querySelectorAll("[data-dm-k8s-action]").forEach((button) => {
         button.hidden = !data.cluster.managed;
@@ -455,6 +513,25 @@
   function saveSettings(form) {
     const message = form.querySelector("[data-dm-k8s-settings-message]");
     const button = form.querySelector('button[type="submit"]');
+    const providerField = form.elements.provider;
+    const envelopeFields = ["cpu_limit_cores", "memory_limit_mib", "host_reserve_cpus", "host_reserve_memory_mib"];
+    const envelopeChanged = envelopeFields.some((name) => {
+      const field = form.elements[name];
+      return field && field.dataset.dmK8sOriginal !== String(field.value ?? "");
+    });
+    if (providerField && providerField.value !== "k3d" && envelopeChanged) {
+      message.textContent = "Resource envelope settings apply to plugin-managed k3d clusters only; external clusters stay read-only.";
+      return;
+    }
+    if (envelopeChanged) {
+      const preview = form.querySelector("[data-dm-k8s-preview]");
+      const rows = form.querySelector("[data-dm-k8s-preview-rows]");
+      const violations = (JSON.parse(preview?.dataset.dmK8sViolations || "[]") || []);
+      if (violations.length) {
+        message.textContent = `Cannot save: ${violations[0]}`;
+        return;
+      }
+    }
     button.disabled = true;
     window.jQuery.ajax({
       url: settingsEndpoint,
@@ -462,11 +539,70 @@
       dataType: "json",
       data: window.jQuery(form).serialize(),
     }).done(() => {
-      message.textContent = "Settings saved.";
+      message.textContent = "Settings saved. Changed resource limits apply on the next cluster restart.";
       refresh();
     }).fail((xhr) => {
       message.textContent = xhr.responseJSON?.error || `Settings save failed (${xhr.status})`;
     }).always(() => { button.disabled = false; });
+  }
+
+  function updateResourcePreview(form) {
+    const preview = form.querySelector("[data-dm-k8s-preview]");
+    const rows = form.querySelector("[data-dm-k8s-preview-rows]");
+    if (!preview || !rows) return;
+    const cores = form.elements.cpu_limit_cores?.value || "0";
+    const memory = form.elements.memory_limit_mib?.value || "0";
+    const message = form.querySelector("[data-dm-k8s-settings-message]");
+    window.jQuery.ajax({
+      url: settingsEndpoint,
+      method: "GET",
+      dataType: "json",
+      data: { preview: "1", cpu_limit_cores: cores, memory_limit_mib: memory },
+    }).done((settings) => {
+      const previewData = settings.preview || {};
+      const violations = previewData.violations || [];
+      preview.dataset.dmK8sViolations = JSON.stringify(violations);
+      preview.hidden = false;
+      const proposed = previewData.proposed || {};
+      const host = previewData.host || {};
+      const fmtMemory = (bytes) => bytes > 0 ? `${(bytes / 1024 ** 3).toFixed(1)} GiB` : "unbounded";
+      const entries = [
+        ["Current CPU limit", String(previewData.current?.cpu_limit_cores || 0) + (previewData.current?.cpu_limit_cores > 0 ? " core(s)" : " (unbounded)")],
+        ["Proposed CPU limit", String(proposed.cpu_limit_cores || 0) + (proposed.cpu_limit_cores > 0 ? " core(s)" : " (unbounded)")],
+        ["Current memory limit", fmtMemory(previewData.current?.memory_limit_bytes || 0)],
+        ["Proposed memory limit", fmtMemory(proposed.memory_limit_bytes || 0)],
+        ["Host logical CPUs", String(host.logical_cpus ?? "-")],
+        ["Host memory", fmtMemory(host.memory_bytes ?? 0)],
+        ["Host reserve", `${host.host_reserve_cpus ?? "-"} CPU(s) · ${fmtMemory(host.host_reserve_memory_bytes ?? 0)}`],
+      ];
+      rows.innerHTML = entries.map(([label, value]) => `<dt>${escapeHtml(label)}:</dt><dd>${escapeHtml(value)}</dd>`).join("")
+        + (violations.length
+          ? `<dt>Blocked:</dt><dd><ul class="dm-k8s-preview-violations">${violations.map((v) => `<li>${escapeHtml(v)}</li>`).join("")}</ul></dd>`
+          : '<dt class="green-text">Validation:</dt><dd class="green-text">No unsafe conditions detected.</dd>');
+      if (message && !message.textContent.startsWith("Settings saved")) {
+        message.textContent = violations.length ? "Preview shows blocking conditions; apply is disabled." : "";
+      }
+    });
+  }
+
+  function watchResourcePreview() {
+    const form = document.querySelector("[data-dm-k8s-settings-form]");
+    if (!form) return;
+    const inputs = Array.from(form.querySelectorAll("[data-dm-k8s-preview-input]"));
+    if (!inputs.length) return;
+    const storeOriginals = () => inputs.forEach((input) => { input.dataset.dmK8sOriginal = String(input.value ?? ""); });
+    let debounce = null;
+    inputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        window.clearTimeout(debounce);
+        debounce = window.setTimeout(() => updateResourcePreview(form), 400);
+      });
+    });
+    form.addEventListener("submit", storeOriginals, { once: true });
+    window.setTimeout(() => {
+      storeOriginals();
+      updateResourcePreview(form);
+    }, 0);
   }
 
   document.addEventListener("click", (event) => {
@@ -513,12 +649,14 @@
       observeViews();
       hideEmptyTabs();
       loadSettings();
+      watchResourcePreview();
       if (window.location.hash === "#dm-k8s-settings") document.querySelector("#dm-k8s-settings")?.setAttribute("open", "");
     }, { once: true });
   } else {
     observeViews();
     hideEmptyTabs();
     loadSettings();
+    watchResourcePreview();
     if (window.location.hash === "#dm-k8s-settings") document.querySelector("#dm-k8s-settings")?.setAttribute("open", "");
   }
   setRefreshInterval(15);

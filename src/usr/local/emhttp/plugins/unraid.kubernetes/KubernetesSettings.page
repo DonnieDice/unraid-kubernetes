@@ -52,6 +52,30 @@ Code="f1b3"
       </dl>
     </div>
     <div class="dm-k8s-settings-section">
+      <h3>Resource envelope (k3d)</h3>
+      <p class="dm-k8s-settings-help">Docker-level limits for the k3d server container. These are separate from Kubernetes workload requests and limits. Leave 0 for unbounded. Applied on the next cluster restart; the plugin never rewrites an adopted k3d config.</p>
+      <dl>
+        <dt>k3d CPU limit (cores):</dt>
+        <dd><input type="number" name="cpu_limit_cores" min="0" max="999" step="1" inputmode="numeric" data-dm-k8s-preview-input></dd>
+      </dl>
+      <dl>
+        <dt>k3d memory limit (MiB):</dt>
+        <dd><input type="number" name="memory_limit_mib" min="0" max="999999" step="1" inputmode="numeric" data-dm-k8s-preview-input></dd>
+      </dl>
+      <dl>
+        <dt>Host-reserved CPUs:</dt>
+        <dd><input type="number" name="host_reserve_cpus" min="0" max="99" step="1" inputmode="numeric" data-dm-k8s-preview-input></dd>
+      </dl>
+      <dl>
+        <dt>Host-reserved memory (MiB):</dt>
+        <dd><input type="number" name="host_reserve_memory_mib" min="0" max="999999" step="1" inputmode="numeric" data-dm-k8s-preview-input></dd>
+      </dl>
+      <div class="dm-k8s-resource-preview" data-dm-k8s-preview hidden>
+        <h4>Impact preview</h4>
+        <dl data-dm-k8s-preview-rows></dl>
+      </div>
+    </div>
+    <div class="dm-k8s-settings-section">
       <h3>Visibility</h3>
       <dl>
         <dt>Show Dashboard widget:</dt>

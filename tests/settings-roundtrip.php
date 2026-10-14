@@ -20,6 +20,10 @@ $_POST = [
     'show_docker_header' => 'no',
     'cpu_display_unit' => 'cores',
     'refresh_interval' => '5',
+    'cpu_limit_cores' => '4',
+    'memory_limit_mib' => '4096',
+    'host_reserve_cpus' => '2',
+    'host_reserve_memory_mib' => '2048',
 ];
 
 ob_start();
@@ -36,6 +40,10 @@ if (($response['ok'] ?? false) !== true
     || ($saved['SHOW_DOCKER_HEADER'] ?? '') !== 'no'
     || ($saved['CPU_DISPLAY_UNIT'] ?? '') !== 'cores'
     || ($saved['REFRESH_INTERVAL'] ?? '') !== '5'
+    || ($saved['CPU_LIMIT_CORES'] ?? '') !== '4'
+    || ($saved['MEMORY_LIMIT_MIB'] ?? '') !== '4096'
+    || ($saved['HOST_RESERVE_CPUS'] ?? '') !== '2'
+    || ($saved['HOST_RESERVE_MEMORY_MIB'] ?? '') !== '2048'
     || ($saved['TOKEN_FILE'] ?? '') === '') {
     fwrite(STDERR, 'Settings round-trip failed: response=' . json_encode($response)
         . ', cluster=' . ($saved['CLUSTER_NAME'] ?? 'missing')

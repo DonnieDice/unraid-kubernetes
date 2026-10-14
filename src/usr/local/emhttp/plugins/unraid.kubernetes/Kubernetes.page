@@ -52,6 +52,19 @@ Cond="exec(\"grep -o '^DOCKER_ENABLED=.yes' /boot/config/docker.cfg 2>/dev/null\
     </tr></thead><tbody data-dm-k8s-pods></tbody></table>
   </div>
 
+  <h3>Resource envelope</h3>
+  <p>Host reserve and the k3d container envelope are Docker-level settings, separate from Kubernetes workload requests, limits, and QoS. Exclusive CPU rows appear only when the CPU Manager static policy is active.</p>
+  <div class="dm-k8s-table-wrap">
+    <table class="tablesorter"><thead><tr>
+      <th>Layer</th><th>CPU</th><th>Memory</th><th>Source</th>
+    </tr></thead><tbody data-dm-k8s-resources></tbody></table>
+  </div>
+  <div class="dm-k8s-table-wrap">
+    <table class="tablesorter"><thead><tr>
+      <th>Namespace</th><th>Pod</th><th>QoS</th><th>CPU requests/limits</th><th>Memory requests/limits</th><th>Priority</th><th>Exclusive CPUs</th>
+    </tr></thead><tbody data-dm-k8s-allocations></tbody></table>
+  </div>
+
   <h3>Workload history</h3>
   <p>Retained completed and failed job pods. Active workloads only appear above.</p>
   <div class="dm-k8s-table-wrap">

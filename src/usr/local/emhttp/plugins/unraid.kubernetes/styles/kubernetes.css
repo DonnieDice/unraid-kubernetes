@@ -620,3 +620,38 @@ table.dm-k8s-runtime-table {
   .dm-k8s-docker-actions { gap: 6px 14px; justify-content: flex-start; width: 100%; }
   .dm-k8s-table-wrap { overflow-x: auto; }
 }
+
+.dm-k8s-resource-preview {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--dm-k8s-border);
+  border-radius: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+}
+
+.dm-k8s-resource-preview h4 {
+  margin: 0 0 8px;
+}
+
+.dm-k8s-resource-preview dl {
+  margin: 0;
+}
+
+.dm-k8s-resource-preview dt {
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.dm-k8s-resource-preview dd {
+  margin: 0 0 0 12px;
+}
+
+.dm-k8s-preview-violations {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.dm-k8s-preview-violations li {
+  color: #f27777;
+  margin: 2px 0;
+}

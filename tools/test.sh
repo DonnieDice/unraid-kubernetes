@@ -26,6 +26,7 @@ exit(
 php tests/settings-roundtrip.php
 php tests/warning-state.php
 php tests/network-visibility.php
+php tests/resource-envelope.php
 node --check src/usr/local/emhttp/plugins/unraid.kubernetes/scripts/kubernetes.js
 xmllint --noout plugin/unraid.kubernetes.plg.in
 xmllint --noout plugin/unraid.kubernetes.plg ca_profile.xml plugins/*.xml
